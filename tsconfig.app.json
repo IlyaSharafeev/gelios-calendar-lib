@@ -8,14 +8,15 @@
     },
     "types": ["node", "vite/client"],
     "allowSyntheticDefaultImports": true,
-    "noImplicitAny": false, // Already false, good for ignoring implicit any
-    "noUnusedLocals": false, // Already false, good for ignoring unused locals
-    "noUnusedParameters": false, // Already false, good for ignoring unused parameters
-    "skipLibCheck": true, // Already true, good for skipping library checks
+    "noImplicitAny": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "skipLibCheck": true,
     "allowImportingTsExtensions": true,
-    "strict": false, // Already false, good for ignoring strict type checks
-    "noEmitOnError": false, // Add this line to not emit files if there are errors
-    "isolatedModules": false // Add this line to relax isolated module checks
+    "strict": false,
+    "noEmitOnError": false,
+    "isolatedModules": false,
+    "noEmit": true // Добавлено
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "vite.config.ts"],
   "vueCompilerOptions": {

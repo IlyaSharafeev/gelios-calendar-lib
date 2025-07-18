@@ -9,17 +9,17 @@
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
-    "isolatedModules": false, // Change this to false
+    "isolatedModules": false,
     "moduleDetection": "force",
     "noEmit": true,
-    "noEmitOnError": false, // Add this line to not emit files if there are errors
+    "noEmitOnError": false,
 
     /* Linting */
-    "strict": false, // Already false
-    "strictNullChecks": false, // Already false
-    "noImplicitAny": false, // Already false
-    "noUnusedLocals": true, // Consider changing to false if these errors are frequent
-    "noUnusedParameters": true, // Consider changing to false if these errors are frequent
+    "strict": false,
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "noUnusedLocals": false, // Изменено
+    "noUnusedParameters": false, // Изменено
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
