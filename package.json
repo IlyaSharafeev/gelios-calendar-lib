@@ -1,0 +1,50 @@
+{
+  "name": "gelios-calendar-lib",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@vee-validate/zod": "^4.15.1",
+    "@vuepic/vue-datepicker": "^11.0.2",
+    "axios": "^1.10.0",
+    "date-fns": "^4.1.0",
+    "jwt-decode": "^4.0.0",
+    "pinia": "^2.3.1",
+    "vee-validate": "^4.15.1",
+    "vue": "^3.5.17",
+    "vue-final-modal": "^4.5.5",
+    "vue-i18n": "^10.0.8",
+    "vue-router": "^4.5.1",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@iconify/vue": "^4.3.0",
+    "@tsconfig/node22": "^22.0.2",
+    "@types/node": "^22.16.4",
+    "@vitejs/plugin-vue": "^5.2.4",
+    "@vue/eslint-config-prettier": "^10.2.0",
+    "@vue/eslint-config-typescript": "^14.6.0",
+    "@vue/tsconfig": "^0.5.1",
+    "autoprefixer": "^10.4.21",
+    "concurrently": "^9.2.0",
+    "eslint": "^9.31.0",
+    "eslint-plugin-oxlint": "^0.11.1",
+    "eslint-plugin-vue": "^9.33.0",
+    "npm-run-all2": "^7.0.2",
+    "oxlint": "^0.11.1",
+    "postcss": "^8.5.6",
+    "prettier": "^3.6.2",
+    "sass-embedded": "^1.89.2",
+    "tailwind-config-viewer": "^2.0.4",
+    "tailwindcss": "^3.4.17",
+    "typescript": "~5.6.3",
+    "vite": "^5.4.19",
+    "vite-plugin-vue-devtools": "^7.7.7",
+    "vue-tsc": "^2.2.12"
+  }
+}

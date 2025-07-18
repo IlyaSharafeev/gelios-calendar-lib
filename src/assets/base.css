@@ -1,0 +1,60 @@
+@import url('https://fonts.googleapis.com/css2?family=Onest:wght@100..900&display=swap');
+
+*::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.0);
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: darkgrey;
+  border-radius: 3px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  font-weight: normal;
+}
+
+body {
+  font-family: 'Onest', sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-style: normal;
+
+  min-height: 100vh;
+
+  color: #262A32;
+  background: #f3f3f5;
+
+  transition: color 0.5s, background-color 0.5s;
+
+  line-height: 1.6;
+
+  font-size: 1rem;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:root {
+  --dp-font-family: 'Onest', sans-serif !important;
+  --dp-border-radius: 10px !important;
+  --dp-font-size: 0.875rem !important;
+  --dp-preview-font-size: 0.875rem !important;
+  --dp-action-buttons-padding: 4px 8px !important;
+  --dp-input-padding: 9px 30px 6px 12px !important;
+}
+
+.dp__theme_light {
+  --dp-border-color: #e5e7eb !important;
+  --dp-border-color-hover: #e5e7eb !important;
+  --dp-border-color-focus: #e5e7eb !important;
+  --dp-primary-color: #0066FF !important;
+}
