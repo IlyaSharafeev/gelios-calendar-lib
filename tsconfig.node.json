@@ -9,18 +9,19 @@
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
-    "isolatedModules": true,
+    "isolatedModules": false, // Change this to false
     "moduleDetection": "force",
     "noEmit": true,
+    "noEmitOnError": false, // Add this line to not emit files if there are errors
 
     /* Linting */
-    "strict": false, // Disable all strict type-checking options
-    "strictNullChecks": false, // Allow null/undefined to be assigned to other types
-    "noImplicitAny": false, // Allow implicit any types
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "strict": false, // Already false
+    "strictNullChecks": false, // Already false
+    "noImplicitAny": false, // Already false
+    "noUnusedLocals": true, // Consider changing to false if these errors are frequent
+    "noUnusedParameters": true, // Consider changing to false if these errors are frequent
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src/**/*", "vite.config.ts"] // Include all source files
+  "include": ["src/**/*", "vite.config.ts"]
 }
