@@ -4,7 +4,6 @@ import { Icon } from '@iconify/vue';
 import { useI18n } from 'vue-i18n';
 import Datepicker from '@vuepic/vue-datepicker';
 import api from '../services/api.js';
-import BaseDropdown from '../components/BaseDropdown.vue';
 import TrainerSelection from '../components/TrainerSelection.vue' // Убедитесь, что путь правильный
 
 const { t, locale } = useI18n();
