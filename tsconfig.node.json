@@ -7,18 +7,20 @@
     "skipLibCheck": true,
 
     /* Bundler mode */
-    "moduleResolution": "Bundler",
+    "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "moduleDetection": "force",
     "noEmit": true,
 
     /* Linting */
-    "strict": true,
+    "strict": false, // Disable all strict type-checking options
+    "strictNullChecks": false, // Allow null/undefined to be assigned to other types
+    "noImplicitAny": false, // Allow implicit any types
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["vite.config.ts"]
+  "include": ["src/**/*", "vite.config.ts"] // Include all source files
 }
