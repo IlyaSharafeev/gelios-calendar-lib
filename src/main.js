@@ -5,7 +5,7 @@ import 'vue-final-modal/style.css'
 import { createVfm } from 'vue-final-modal'
 import App from './App.vue'
 import i18n from '/i18n'
-import router from './router'
+import router from './router/index.js'
 const vfm = createVfm()
 
 

@@ -3,7 +3,7 @@ import { ref, watch, computed, onMounted } from 'vue';
 import { Icon } from '@iconify/vue';
 import { useI18n } from 'vue-i18n';
 import Datepicker from '@vuepic/vue-datepicker';
-import api from '../services/api';
+import api from '../services/api.js';
 import BaseDropdown from '../components/BaseDropdown.vue';
 import TrainerSelection from '../components/TrainerSelection.vue' // Убедитесь, что путь правильный
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {onMounted, ref, watch} from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import api from '../services/api'
+import api from '../services/api.js'
 import { format, parse, isWithinInterval } from 'date-fns'
 
 import BaseFilterPanel from '../components/BaseFilterPanel.vue'
