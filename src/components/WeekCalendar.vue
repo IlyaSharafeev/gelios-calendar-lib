@@ -245,7 +245,7 @@ onMounted(() => {
       </div>
     </div>
 
-    <div class="max-w-[calc(100vw-236px-64px-108px-32px)] overflow-x-auto">
+    <div class="overflow-x-auto">
       <div
         class="grid gap-6 mb-3 animate-fade-in-up [animation-fill-mode:forwards] h-10"
         style="grid-template-columns: repeat(7, 340px);"
