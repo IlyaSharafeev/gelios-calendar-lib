@@ -37,6 +37,7 @@ const emit = defineEmits(['weekChange', 'itemClick'])
 const { t, locale } = useI18n()
 const currentDate = ref(new Date())
 const expandedSlots = ref(new Set())
+const scrollContainer = ref<HTMLElement | null>(null) // Ref for the scrollable container
 
 // State for LessonActionsModal
 const isLessonActionsModalOpen = ref(false)
@@ -90,7 +91,21 @@ const formatDateRange = computed(() => {
   return `${formatDate(firstDay)} - ${formatDate(lastDay)}`
 })
 
-// Methods
+// --- Methods ---
+
+// New function to scroll the calendar horizontally
+const scrollHorizontally = (direction: 'left' | 'right') => {
+  if (scrollContainer.value) {
+    // Each column is 340px wide, and the gap is 24px (gap-6)
+    const scrollAmount = 340 + 24;
+    scrollContainer.value.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth',
+    });
+  }
+};
+
+
 const formatHour = (hour: number) => {
   return `${String(hour).padStart(2, '0')}:00`
 }
@@ -102,7 +117,7 @@ const getRecords = (date: Date, hour: number) => {
   return props.calendarItems.filter(item => {
     const itemDate = new Date(item[props.dateField])
     return format(itemDate, 'yyyy-MM-dd') === dateKey &&
-      format(itemDate, 'HH') === hourStr
+        format(itemDate, 'HH') === hourStr
   })
 }
 
@@ -142,20 +157,20 @@ const emitWeekChange = () => {
   const weekEnd = addDays(weekStart, 6)
 
   const startDate = setMilliseconds(
-    setSeconds(
-      setMinutes(
-        setHours(weekStart, 0),
-        0),
-      0),
-    0)
+      setSeconds(
+          setMinutes(
+              setHours(weekStart, 0),
+              0),
+          0),
+      0)
 
   const endDate = setMilliseconds(
-    setSeconds(
-      setMinutes(
-        setHours(weekEnd, 23),
-        59),
-      59),
-    999)
+      setSeconds(
+          setMinutes(
+              setHours(weekEnd, 23),
+              59),
+          59),
+      999)
 
   emit('weekChange', {
     start_date: startDate.toISOString(),
@@ -165,12 +180,6 @@ const emitWeekChange = () => {
 
 // Function for 'add lesson' button (now without DemoLessonModal)
 const addLesson = (date: Date, hour: number) => {
-  // If DemoLessonModal is removed, you need a new modal component or a different
-  // approach for adding a new lesson here.
-  // For now, this button will not open a modal.
-  // console.log('Add Lesson functionality needs a new modal or different implementation.', { date, hour });
-  // Example: You might open LessonActionsModal in a 'create new' mode if it supports it
-  // selectedLesson.value = { lessonDate: setHours(setMinutes(date, 0), hour).toISOString() };
   isLessonActionsModalOpen.value = true;
 };
 
@@ -232,11 +241,11 @@ onMounted(() => {
 
   <div class="flex h-full gap-8">
 
-    <div class="flex flex-col gap-3 mt-[52px]">
+    <div class="flex flex-col gap-3 mt-[52px] flex-shrink-0">
       <div
-        class="flex w-[108px] min-h-[88px] items-center justify-center bg-gblack-5 rounded-[22px] opacity-0 transition-all duration-300 animate-fade-in-up [animation-fill-mode:forwards]"
-        v-for="(hour, index) in 24"
-        :style="{
+          class="flex w-[108px] min-h-[88px] items-center justify-center bg-gblack-5 rounded-[22px] opacity-0 transition-all duration-300 animate-fade-in-up [animation-fill-mode:forwards]"
+          v-for="(hour, index) in 24"
+          :style="{
           'grid-template-columns': 'repeat(7, 340px)',
           'animation-delay': `${index * 50}ms`,
         }"
@@ -245,78 +254,98 @@ onMounted(() => {
       </div>
     </div>
 
-    <div class="overflow-x-auto flex-1 min-w-0">
-      <div
-        class="grid gap-6 mb-3 animate-fade-in-up [animation-fill-mode:forwards] h-10"
-        style="grid-template-columns: repeat(7, 340px);"
+    <div class="relative flex-1 min-w-0">
+
+      <button
+          @click="scrollHorizontally('left')"
+          class="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-white/80 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-colors p-2"
+          aria-label="Scroll left"
       >
-        <div
-          v-for="day in weekDays"
-          :key="day.date"
-          class="flex items-center justify-center gap-4 text-gblack-50 bg-white rounded-xl"
-        >
-          <span class="text-sm font-medium">{{ day.name }}</span>
-          <div class="w-1 h-1 bg-gblack-50 rounded-full" />
-          <span class="text-sm font-medium">{{ day.date }}</span>
-        </div>
-      </div>
+        <Icon icon="material-symbols:chevron-left" width="24" height="24" color="#0066FF" />
+      </button>
 
-      <div class="grid gap-3">
+      <div ref="scrollContainer" class="overflow-x-auto flex-1 min-w-0 pb-4">
         <div
-          v-for="(hour, index) in 24"
-          :key="hour"
-          class="grid gap-6 opacity-0 transition-all duration-300 animate-fade-in-up [animation-fill-mode:forwards]"
-          :style="{
-            'grid-template-columns': 'repeat(7, 340px)',
-            'animation-delay': `${index * 50}ms`,
-          }"
+            class="grid gap-6 mb-3 animate-fade-in-up [animation-fill-mode:forwards] h-10"
+            style="grid-template-columns: repeat(7, 340px);"
         >
-
           <div
-            v-for="day in weekDays"
-            :key="day.date + hour"
-            class="min-h-[88px] bg-white rounded-xl"
+              v-for="day in weekDays"
+              :key="day.date"
+              class="flex items-center justify-center gap-4 text-gblack-50 bg-white rounded-xl"
           >
-            <div class="add-lesson-wrapper">
-              <div class="add-lesson" @click="addLesson(day.fullDate, hour - 1)">
-                <div class="icon-plus"></div>
-                Занятие
-              </div>
-            </div>
-            <slot
-              name="calendarItem"
-              v-for="record in displayRecords(day.fullDate, hour - 1)"
-              :key="record[props.idField]"
-              :item="record"
-              @click="openLessonActionsModal(record)" ></slot>
+            <span class="text-sm font-medium">{{ day.name }}</span>
+            <div class="w-1 h-1 bg-gblack-50 rounded-full" />
+            <span class="text-sm font-medium">{{ day.date }}</span>
+          </div>
+        </div>
+
+        <div class="grid gap-3">
+          <div
+              v-for="(hour, index) in 24"
+              :key="hour"
+              class="grid gap-6 opacity-0 transition-all duration-300 animate-fade-in-up [animation-fill-mode:forwards]"
+              :style="{
+              'grid-template-columns': 'repeat(7, 340px)',
+              'animation-delay': `${index * 50}ms`,
+            }"
+          >
 
             <div
-              v-if="hasMoreRecords(day.fullDate, hour - 1)"
-              @click="toggleExpand(day.fullDate, hour - 1)"
-              class="text-center cursor-pointer bg-gblack-3 py-0.5"
+                v-for="day in weekDays"
+                :key="day.date + hour"
+                class="min-h-[88px] bg-white rounded-xl"
             >
-              <Icon
-                :class="isExpanded(day.fullDate, hour - 1) ? 'rotate-90' : '-rotate-90'"
-                icon="material-symbols:chevron-left"
-                width="20"
-                height="20"
-                color="#0066FF"
-                class="mx-auto"
-              />
+              <div class="add-lesson-wrapper">
+                <div class="add-lesson" @click="addLesson(day.fullDate, hour - 1)">
+                  <div class="icon-plus"></div>
+                  Занятие
+                </div>
+              </div>
+              <slot
+                  name="calendarItem"
+                  v-for="record in displayRecords(day.fullDate, hour - 1)"
+                  :key="record[props.idField]"
+                  :item="record"
+                  @click="openLessonActionsModal(record)" ></slot>
+
+              <div
+                  v-if="hasMoreRecords(day.fullDate, hour - 1)"
+                  @click="toggleExpand(day.fullDate, hour - 1)"
+                  class="text-center cursor-pointer bg-gblack-3 py-0.5"
+              >
+                <Icon
+                    :class="isExpanded(day.fullDate, hour - 1) ? 'rotate-90' : '-rotate-90'"
+                    icon="material-symbols:chevron-left"
+                    width="20"
+                    height="20"
+                    color="#0066FF"
+                    class="mx-auto"
+                />
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      <button
+          @click="scrollHorizontally('right')"
+          class="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-white/80 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-colors p-2"
+          aria-label="Scroll right"
+      >
+        <Icon icon="material-symbols:chevron-right" width="24" height="24" color="#0066FF" />
+      </button>
+
     </div>
   </div>
 
   <LessonActionsModal
-    :is-open="isLessonActionsModalOpen"
-    :lesson="selectedLesson"
-    @close="handleLessonActionsModalClose"
-    @go-to-lesson="handleGoToLesson"
-    @cancel-lesson="handleCancelLesson"
-    @reschedule-success="handleRescheduleSuccess" @change-teacher="handleChangeTeacher"
+      :is-open="isLessonActionsModalOpen"
+      :lesson="selectedLesson"
+      @close="handleLessonActionsModalClose"
+      @go-to-lesson="handleGoToLesson"
+      @cancel-lesson="handleCancelLesson"
+      @reschedule-success="handleRescheduleSuccess" @change-teacher="handleChangeTeacher"
   />
 </template>
 
