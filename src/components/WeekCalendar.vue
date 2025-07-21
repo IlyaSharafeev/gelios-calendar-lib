@@ -256,13 +256,6 @@ onMounted(() => {
 
     <div class="relative flex-1 min-w-0">
 
-      <button
-          @click="scrollHorizontally('left')"
-          class="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-white/80 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-colors p-2"
-          aria-label="Scroll left"
-      >
-        <Icon icon="material-symbols:chevron-left" width="24" height="24" color="#0066FF" />
-      </button>
 
       <div ref="scrollContainer" class="overflow-x-auto flex-1 min-w-0 pb-4">
         <div
@@ -328,16 +321,25 @@ onMounted(() => {
         </div>
       </div>
 
-      <button
-          @click="scrollHorizontally('right')"
-          class="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-white/80 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-colors p-2"
-          aria-label="Scroll right"
-      >
-        <Icon icon="material-symbols:chevron-right" width="24" height="24" color="#0066FF" />
-      </button>
-
     </div>
   </div>
+
+  <button
+      @click="scrollHorizontally('left')"
+      class="fixed left-6 top-1/2 -translate-y-1/2 z-20 bg-white/80 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-colors p-2"
+      aria-label="Scroll left"
+  >
+    <Icon icon="material-symbols:chevron-left" width="24" height="24" color="#0066FF" />
+  </button>
+
+  <button
+      @click="scrollHorizontally('right')"
+      class="fixed right-6 top-1/2 -translate-y-1/2 z-20 bg-white/80 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-colors p-2"
+      aria-label="Scroll right"
+  >
+    <Icon icon="material-symbols:chevron-right" width="24" height="24" color="#0066FF" />
+  </button>
+
 
   <LessonActionsModal
       :is-open="isLessonActionsModalOpen"
