@@ -44,7 +44,7 @@ api.interceptors.response.use(
 
         try {
           // Attempt to refresh the token using the refresh token from localStorage
-          const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/token/refresh`, {
+          const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/auth/refresh-token`, {
             refresh: localStorage.getItem('refreshToken'),
           })
 
