@@ -7,6 +7,7 @@ import { format, parse, isWithinInterval } from 'date-fns'
 import BaseFilterPanel from '../components/BaseFilterPanel.vue'
 import WeekCalendar from '../components/WeekCalendar.vue'
 import LessonScheduleCalendarCell from '../components/LessonScheduleCalendarCell.vue'
+import authStore from '../store/authStore.js'; // Import authStore
 
 // Type definitions for better clarity
 interface Schedule {
@@ -64,9 +65,9 @@ const DAY_NAME_TO_JS_DAY = {
  * Determines if a specific child course is frozen on a given date
  */
 const isCourseFrozenOnDate = (
-  freezes: Freeze[],
-  childCourseId: number,
-  date: Date
+    freezes: Freeze[],
+    childCourseId: number,
+    date: Date
 ): boolean => {
   // Find any freeze period that matches the course and contains the date
   return freezes.some(freeze => {
@@ -97,8 +98,8 @@ const isCourseFrozenOnDate = (
  * Converts schedules and freeze data into calendar items
  */
 const processSchedulesAndFreezes = (
-  schedules: Schedule[],
-  freezes: Freeze[]
+    schedules: Schedule[],
+    freezes: Freeze[]
 ) => {
   // Ensure we have valid date range
   if (!dateRange.value.startDate || !dateRange.value.endDate) {
@@ -124,7 +125,7 @@ const processSchedulesAndFreezes = (
 
     // Find all dates that match this schedule's day of week
     const matchingDates = allDatesInRange.filter(date =>
-      date.getDay() === scheduleDayNumber
+        date.getDay() === scheduleDayNumber
     );
 
     // Create a calendar item for each matching date
@@ -168,6 +169,14 @@ const processSchedulesAndFreezes = (
 };
 
 const fetch = async () => {
+  // Only attempt to fetch if authStore has a token, or if we're not in a situation that requires one yet.
+  // We explicitly check for the token here because it might not be available immediately via postMessage.
+  if (!authStore.token && (route.query.search || route.query.child_id || route.query.teacher_id)) {
+    // If a token is required for these filters but not present, you might want to wait or handle this differently
+    console.warn("Attempted to fetch with filters but no token available. Waiting for token from parent.");
+    return;
+  }
+
   if (!dateRange.value.startDate || !dateRange.value.endDate) {
     return
   }
@@ -206,6 +215,7 @@ const fetch = async () => {
   }
   catch (err) {
     console.error('Error fetching data:', err)
+    // Handle specific errors like 401 if needed, though api.js should handle token refresh/logout
   }
 }
 
@@ -218,17 +228,53 @@ const handleWeekChange = (range) => {
   fetch()
 }
 
-// watch(
-//   () => [route.query.search, route.query.teacher_id, route.query.child_id],
-//   () => {
-//     if (dateRange.value.startDate) {
-//       fetch()
-//     }
-//   }
-// )
+// Watch for changes in route queries AND for the authStore token to be set.
+// This ensures that if the token arrives via postMessage AFTER the component mounts,
+// a fetch is triggered.
+watch(
+    () => [route.query.search, route.query.teacher_id, route.query.child_id, authStore.token],
+    () => {
+      // Only fetch if date range is set AND (token exists OR no token-requiring filters are active)
+      if (dateRange.value.startDate && (authStore.token || (!route.query.search && !route.query.child_id && !route.query.teacher_id))) {
+        fetch()
+      }
+    },
+    { immediate: true } // Run immediately to fetch initial data if conditions are met
+)
 
 onMounted(() => {
-  fetch();
+  // Listen for messages from the parent window
+  window.addEventListener('message', (event) => {
+    // IMPORTANT: Validate the origin of the message for security!
+    // Replace 'YOUR_PARENT_ORIGIN' with the actual domain/protocol/port of the parent application
+    // if (event.origin !== 'YOUR_PARENT_ORIGIN') {
+    //   console.warn('Received message from untrusted origin:', event.origin);
+    //   return;
+    // }
+
+    if (event.data && event.data.type === 'SET_AUTH_TOKENS') {
+      const { accessToken, refreshToken } = event.data;
+      if (accessToken) {
+        authStore.setTokens(accessToken, refreshToken); // Update authStore
+        console.log('Tokens received and set from parent iframe message.');
+        // If you want to immediately trigger a fetch after receiving tokens, do it here
+        // ensure dateRange is already set, or you can call handleWeekChange with a default range.
+        if (dateRange.value.startDate) {
+          fetch(); // Trigger data fetch with the new token
+        }
+      }
+    }
+  });
+
+  // Initial fetch on mount. If the token is not yet available,
+  // the watch effect (with immediate: true) will re-trigger fetch once the token arrives.
+  // Or, if the token is already in localStorage (e.g., if navigating within the iframe),
+  // it will be picked up by authStore.init() and fetch will proceed.
+  if (authStore.token) { // Only fetch if token is already present (e.g., from localStorage)
+    fetch();
+  } else {
+    console.log("No token in authStore on mount. Waiting for postMessage or manual refresh.");
+  }
 })
 </script>
 
@@ -236,20 +282,20 @@ onMounted(() => {
   <section class="bg-ggray-bg px-8 pb-8 overflow-y-auto">
 
     <BaseFilterPanel
-      :total="instance.total"
-      :is-pagination="false"
+        :total="instance.total"
+        :is-pagination="false"
     />
 
     <article class="mt-6 flex flex-col">
       <WeekCalendar
-        :calendar-items="instance.data"
-        date-field="lessonDate"
-        @week-change="handleWeekChange"
+          :calendar-items="instance.data"
+          date-field="lessonDate"
+          @week-change="handleWeekChange"
       >
         <template #calendarItem="{ item }">
           <LessonScheduleCalendarCell
-            :item="item"
-            @item-click="handleScheduleClick"
+              :item="item"
+              @item-click="handleScheduleClick"
           />
         </template>
       </WeekCalendar>
