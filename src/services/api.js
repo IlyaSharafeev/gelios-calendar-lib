@@ -58,7 +58,7 @@ api.interceptors.response.use(
             // Attempt to refresh the token using the refresh token from localStorage
             // Убедитесь, что baseURL используется для запроса обновления токена
             const { data } = await axios.post(`${api.defaults.baseURL}/auth/refresh-token`, {
-              token_refresh: localStorage.getItem('refreshToken'),
+              refresh: localStorage.getItem('refreshToken'),
             })
 
             // Update the token in the auth store and localStorage
