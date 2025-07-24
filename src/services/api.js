@@ -4,7 +4,7 @@ import authStore from "../store/authStore.js";
 // Инициализируем Axios без baseURL или с временным значением.
 // baseURL будет установлен динамически из родительского окна.
 const api = axios.create({
-  baseURL: "https://test-crm.gelios-school.com/server/api", // Используем VITE_API_URL как запасной вариант или '/'
+  baseURL: "https://gelios-teacher.ddns.net/api", // Используем VITE_API_URL как запасной вариант или '/'
   withCredentials: true,
 })
 
