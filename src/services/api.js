@@ -1,98 +1,113 @@
-import axios from 'axios'
-import authStore from "../store/authStore.js";
+import axios from 'axios';
+import authStore from '../store/authStore.js';
+
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+    failedQueue.forEach(prom => {
+        if (error) {
+            prom.reject(error);
+        } else {
+            prom.resolve(token);
+        }
+    });
+    failedQueue = [];
+};
 
 const api = axios.create({
-  baseURL: "https://gelios-teacher.ddns.net/api",
-  withCredentials: true,
-})
+    baseURL: '', // Will be set dynamically
+});
 
-let refreshTokenBaseURL = "https://gelios-teacher.ddns.net/api";
+api.interceptors.request.use(config => {
+    const token = authStore.token;
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+}, error => {
+    return Promise.reject(error);
+});
 
-let isRefreshing = false
-let subscribers = []
+let refreshTokenBaseURL = '';
+
+api.interceptors.response.use(response => {
+    return response;
+}, async error => {
+    const originalRequest = error.config;
+
+    // Если это не 401 ошибка, отклоняем ее
+    if (error.response.status !== 401) {
+        return Promise.reject(error);
+    }
+
+    // *** ЭТА СТРОКА ПРЕДОТВРАЩАЕТ ПОВТОРНЫЙ РЕФРЕШ ДЛЯ ОДНОГО И ТОГО ЖЕ ЗАПРОСА ***
+    // Если запрос уже был помечен как "повторный" (т.е. уже была попытка рефреша для него),
+    // то просто отклоняем ошибку, чтобы не попасть в бесконечный цикл.
+    if (originalRequest._retry) {
+        console.log('Request already tried to refresh, rejecting to prevent infinite loop.');
+        return Promise.reject(error);
+    }
+
+    // Если нет токена обновления, или мы уже обновляем токен, добавляем запрос в очередь
+    if (!authStore.refreshToken || isRefreshing) {
+        return new Promise(function(resolve, reject) {
+            failedQueue.push({ resolve, reject });
+        })
+        .then(token => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return api(originalRequest);
+        })
+        .catch(err => {
+            return Promise.reject(err);
+        });
+    }
+
+    // Устанавливаем флаг, что мы начали процесс обновления
+    originalRequest._retry = true;
+    isRefreshing = true;
+
+    try {
+        console.log('Attempting to refresh token...');
+        const oldRefreshToken = authStore.refreshToken;
+        console.log('Old Refresh Token:', oldRefreshToken);
+
+        const response = await axios.post(`${refreshTokenBaseURL}/auth/refresh`, {
+            refresh_token: oldRefreshToken
+        });
+
+        const { access_token, refresh_token } = response.data;
+        console.log('Token refreshed:', access_token ? 'New Access Token received' : 'No new Access Token', refresh_token ? 'New Refresh Token received' : 'No new Refresh Token');
+        console.log('Old Access Token:', authStore.token);
+        console.log('New Access Token:', access_token);
+        console.log('Old Refresh Token:', oldRefreshToken);
+        console.log('New Refresh Token:', refresh_token);
+
+        authStore.setTokens(access_token, refresh_token);
+        processQueue(null, access_token); // Разрешаем все запросы в очереди с новым токеном
+
+        originalRequest.headers.Authorization = `Bearer ${access_token}`;
+        return api(originalRequest); // Повторяем исходный запрос
+
+    } catch (refreshError) {
+        console.error('Failed to refresh token, logging out:', refreshError);
+        processQueue(refreshError); // Отклоняем все запросы в очереди с ошибкой
+        authStore.logout();
+        window.location.href = '/login'; // Перенаправляем на страницу входа
+        return Promise.reject(refreshError);
+    } finally {
+        isRefreshing = false; // Сбрасываем флаг обновления
+    }
+});
 
 export const setApiBaseURL = (url) => {
-  api.defaults.baseURL = url;
-  console.log('API baseURL updated to:', api.defaults.baseURL);
-}
+    api.defaults.baseURL = url;
+    console.log('API Base URL set to:', url);
+};
 
 export const setRefreshTokenBaseURL = (url) => {
-  refreshTokenBaseURL = url;
-  console.log('Refresh Token API baseURL updated to:', refreshTokenBaseURL);
-}
+    refreshTokenBaseURL = url;
+    console.log('Refresh Token Base URL set to:', url);
+};
 
-const subscribeTokenRefresh = (callback) => {
-  subscribers.push(callback)
-}
-
-const onRefreshed = (newToken) => {
-  subscribers.forEach((callback) => callback(newToken))
-  subscribers = []
-}
-
-api.interceptors.request.use((config) => {
-  const token = authStore.token;
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config
-})
-
-api.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-      const originalRequest = error.config
-
-      if (
-          error.response?.status === 401 &&
-          !originalRequest._retry &&
-          localStorage.getItem('refreshToken')
-      ) {
-        originalRequest._retry = true
-
-        if (!isRefreshing) {
-          isRefreshing = true
-
-          const oldAccessToken = authStore.token;
-          const oldRefreshToken = localStorage.getItem('refreshToken');
-
-          try {
-            const { data } = await axios.post(`${refreshTokenBaseURL}/auth/refresh`, {
-              refresh_token: oldRefreshToken,
-            })
-
-            authStore.setTokens(data.access_token, data.refresh_token);
-
-            console.log('Token refreshed:');
-            console.log('  Old Access Token:', oldAccessToken || 'N/A');
-            console.log('  New Access Token:', data.access_token || 'N/A');
-            console.log('  Old Refresh Token:', oldRefreshToken || 'N/A');
-            console.log('  New Refresh Token:', data.refresh_token || 'N/A');
-
-            onRefreshed(data.access_token)
-            isRefreshing = false
-
-            originalRequest.headers.Authorization = `Bearer ${data.access_token}`
-            return api(originalRequest)
-          } catch (err) {
-            isRefreshing = false
-            authStore.logout()
-            console.error('Failed to refresh token, logging out:', err);
-            window.location.href = '/login'
-            return Promise.reject(err)
-          }
-        }
-
-        return new Promise((resolve) => {
-          subscribeTokenRefresh((newToken) => {
-            originalRequest.headers.Authorization = `Bearer ${newToken}`
-            resolve(api(originalRequest))
-          })
-        })
-      }
-
-      return Promise.reject(error)
-    },
-)
-
-export default api
+export default api;
