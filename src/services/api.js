@@ -199,7 +199,7 @@ api.interceptors.response.use(
 
             export default api); // Обрезаем для читаемости
             console.log('  New Access Token:', data.access_token); // Обрезаем для читаемости
-            console.log('  Old Refresh Token:', localStorage.getItem('refreshToken'); // Если вы хотите логировать и старый рефреш
+            console.log('  Old Refresh Token:', localStorage.getItem('refreshToken')); // Если вы хотите логировать и старый рефреш
             console.log('  New Refresh Token:', data.refresh_token); // Если вы хотите логировать и новый рефреш
 
             // Notify all subscribers that the token has been refreshed
