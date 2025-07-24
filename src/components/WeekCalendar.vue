@@ -227,7 +227,6 @@ onMounted(() => {
 <template>
   <div class="flex items-center gap-5 mb-5 mt-2 animate-fade-in-up [animation-fill-mode:forwards]">
     <div class="flex gap-1">
-      123
       <button @click="prevWeek">
         <Icon icon="material-symbols:chevron-left" width="24" height="24" color="#0066FF" />
       </button>
