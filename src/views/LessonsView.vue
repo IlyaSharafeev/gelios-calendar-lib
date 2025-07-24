@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import {onMounted, ref, watch} from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import api from '../services/api.js'
+import api, { setApiBaseURL } from '../services/api.js' // Импортируем setApiBaseURL
 import { format, parse, isWithinInterval } from 'date-fns'
 
 import BaseFilterPanel from '../components/BaseFilterPanel.vue'
 import WeekCalendar from '../components/WeekCalendar.vue'
 import LessonScheduleCalendarCell from '../components/LessonScheduleCalendarCell.vue'
-import authStore from '../store/authStore.js'; // Import authStore
+import authStore from '../store/authStore.js';
 
 // Type definitions for better clarity
 interface Schedule {
@@ -169,11 +169,9 @@ const processSchedulesAndFreezes = (
 };
 
 const fetch = async () => {
-  // Only attempt to fetch if authStore has a token, or if we're not in a situation that requires one yet.
-  // We explicitly check for the token here because it might not be available immediately via postMessage.
-  if (!authStore.token && (route.query.search || route.query.child_id || route.query.teacher_id)) {
-    // If a token is required for these filters but not present, you might want to wait or handle this differently
-    console.warn("Attempted to fetch with filters but no token available. Waiting for token from parent.");
+  // Проверяем, установлен ли baseURL, прежде чем делать запрос
+  if (!api.defaults.baseURL || !authStore.token) {
+    console.warn("API baseURL or token not set. Waiting for postMessage from parent.");
     return;
   }
 
@@ -215,7 +213,6 @@ const fetch = async () => {
   }
   catch (err) {
     console.error('Error fetching data:', err)
-    // Handle specific errors like 401 if needed, though api.js should handle token refresh/logout
   }
 }
 
@@ -228,14 +225,11 @@ const handleWeekChange = (range) => {
   fetch()
 }
 
-// Watch for changes in route queries AND for the authStore token to be set.
-// This ensures that if the token arrives via postMessage AFTER the component mounts,
-// a fetch is triggered.
+// Watch for changes in route queries, authStore token, AND api.defaults.baseURL
 watch(
-    () => [route.query.search, route.query.teacher_id, route.query.child_id, authStore.token],
+    () => [route.query.search, route.query.teacher_id, route.query.child_id, authStore.token, api.defaults.baseURL],
     () => {
-      // Only fetch if date range is set AND (token exists OR no token-requiring filters are active)
-      if (dateRange.value.startDate && (authStore.token || (!route.query.search && !route.query.child_id && !route.query.teacher_id))) {
+      if (dateRange.value.startDate && authStore.token && api.defaults.baseURL) {
         fetch()
       }
     },
@@ -243,38 +237,35 @@ watch(
 )
 
 onMounted(() => {
-  // Listen for messages from the parent window
   window.addEventListener('message', (event) => {
     // IMPORTANT: Validate the origin of the message for security!
-    // Replace 'YOUR_PARENT_ORIGIN' with the actual domain/protocol/port of the parent application
+    // Замените 'YOUR_PARENT_ORIGIN' на фактический домен/протокол/порт родительского приложения.
+    // Например: if (event.origin !== 'https://test-crm.gelios-school.com') { ... }
     // if (event.origin !== 'YOUR_PARENT_ORIGIN') {
     //   console.warn('Received message from untrusted origin:', event.origin);
     //   return;
     // }
 
-    if (event.data && event.data.type === 'SET_AUTH_TOKENS') {
-      const { accessToken, refreshToken } = event.data;
-      if (accessToken) {
-        authStore.setTokens(accessToken, refreshToken); // Update authStore
-        console.log('Tokens received and set from parent iframe message.');
-        // If you want to immediately trigger a fetch after receiving tokens, do it here
-        // ensure dateRange is already set, or you can call handleWeekChange with a default range.
-        if (dateRange.value.startDate) {
-          fetch(); // Trigger data fetch with the new token
+    if (event.data) {
+      if (event.data.type === 'SET_AUTH_TOKENS') {
+        const { accessToken, refreshToken } = event.data;
+        if (accessToken) {
+          authStore.setTokens(accessToken, refreshToken);
+          console.log('Tokens received and set from parent iframe message.');
+        }
+      } else if (event.data.type === 'SET_API_BASE_URL') {
+        const { baseURL } = event.data;
+        if (baseURL) {
+          setApiBaseURL(baseURL); // Устанавливаем baseURL, полученный от родителя
+          console.log('API baseURL received and set from parent iframe message:', baseURL);
         }
       }
     }
   });
 
-  // Initial fetch on mount. If the token is not yet available,
-  // the watch effect (with immediate: true) will re-trigger fetch once the token arrives.
-  // Or, if the token is already in localStorage (e.g., if navigating within the iframe),
-  // it will be picked up by authStore.init() and fetch will proceed.
-  if (authStore.token) { // Only fetch if token is already present (e.g., from localStorage)
-    fetch();
-  } else {
-    console.log("No token in authStore on mount. Waiting for postMessage or manual refresh.");
-  }
+  // Инициализация fetch будет происходить через watch, когда будут доступны и токен, и baseURL.
+  // Если вы хотите, чтобы компонент мог работать без токена для некоторых запросов,
+  // вам нужно будет скорректировать логику fetch и watch.
 })
 </script>
 
