@@ -1,4 +1,4 @@
-import axios from 'axios'
+\import axios from 'axios'
 import authStore from "../store/authStore.js";
 
 const api = axios.create({
@@ -64,10 +64,10 @@ api.interceptors.response.use(
             authStore.setTokens(data.access_token, data.refresh_token);
 
             console.log('Token refreshed:');
-            console.log('  Old Access Token:', oldAccessToken ? oldAccessToken.substring(0, 10) + '...' : 'N/A');
-            console.log('  New Access Token:', data.access_token ? data.access_token.substring(0, 10) + '...' : 'N/A');
-            console.log('  Old Refresh Token:', oldRefreshToken ? oldRefreshToken.substring(0, 10) + '...' : 'N/A');
-            console.log('  New Refresh Token:', data.refresh_token ? data.refresh_token.substring(0, 10) + '...' : 'N/A');
+            console.log('  Old Access Token:', oldAccessToken || 'N/A');
+            console.log('  New Access Token:', data.access_token || 'N/A');
+            console.log('  Old Refresh Token:', oldRefreshToken || 'N/A');
+            console.log('  New Refresh Token:', data.refresh_token || 'N/A');
 
             onRefreshed(data.access_token)
             isRefreshing = false
