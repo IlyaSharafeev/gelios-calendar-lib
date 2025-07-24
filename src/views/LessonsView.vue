@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import {onMounted, ref, watch} from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import api, { setApiBaseURL } from '../services/api.js' // Импортируем setApiBaseURL
+// Импортируем обе функции
+import api, { setApiBaseURL, setRefreshTokenBaseURL } from '../services/api.js'
 import { format, parse, isWithinInterval } from 'date-fns'
 
 import BaseFilterPanel from '../components/BaseFilterPanel.vue'
@@ -254,10 +255,14 @@ onMounted(() => {
           console.log('Tokens received and set from parent iframe message.');
         }
       } else if (event.data.type === 'SET_API_BASE_URL') {
-        const { baseURL } = event.data;
+        const { baseURL, refreshTokenURL } = event.data; // Предполагаем, что родитель может передать оба
         if (baseURL) {
-          setApiBaseURL(baseURL); // Устанавливаем baseURL, полученный от родителя
+          setApiBaseURL(baseURL); // Устанавливаем основной baseURL
           console.log('API baseURL received and set from parent iframe message:', baseURL);
+        }
+        if (refreshTokenURL) { // Если родитель передал отдельный URL для рефреша
+          setRefreshTokenBaseURL(refreshTokenURL); // Устанавливаем его
+          console.log('Refresh Token API baseURL received and set from parent iframe message:', refreshTokenURL);
         }
       }
     }

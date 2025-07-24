@@ -8,13 +8,23 @@ const api = axios.create({
   withCredentials: true,
 })
 
+// Новая переменная для отдельного baseURL для refresh токена
+let refreshTokenBaseURL = "https://gelios-teacher.ddns.net/api"; // Задайте здесь дефолтное значение, если нужно
+
 let isRefreshing = false
 let subscribers = []
 
-// Функция для динамической установки baseURL
+// Функция для динамической установки основного baseURL
 export const setApiBaseURL = (url) => {
   api.defaults.baseURL = url;
   console.log('API baseURL updated to:', api.defaults.baseURL);
+}
+
+// Новая функция для динамической установки baseURL для refresh токена
+export const setRefreshTokenBaseURL = (url) => {
+  // Исправлено: теперь присваиваем переданное значение, а не захардкоженное
+  refreshTokenBaseURL = url;
+  console.log('Refresh Token API baseURL updated to:', refreshTokenBaseURL);
 }
 
 // Function to subscribe to the token refresh event
@@ -55,30 +65,31 @@ api.interceptors.response.use(
           isRefreshing = true
 
           try {
-            // Attempt to refresh the token using the refresh token from localStorage
-            // Убедитесь, что baseURL используется для запроса обновления токена
-            const { data } = await axios.post(`${api.defaults.baseURL}/auth/refresh`, {
+            // !!! ИСПОЛЬЗУЕМ ОТДЕЛЬНЫЙ refreshTokenBaseURL ДЛЯ ЗАПРОСА ОБНОВЛЕНИЯ ТОКЕНА !!!
+            const { data } = await axios.post(`${refreshTokenBaseURL}/auth/refresh`, {
               refresh_token: localStorage.getItem('refreshToken'),
             })
 
             // Update the token in the auth store and localStorage
-            authStore.token = data.access_token // Обновляем access token в authStore
-            authStore.refreshToken = data.refresh_token // Обновляем refresh token в authStore
-            localStorage.setItem('token', data.access_token) // Обновляем access token в localStorage
-            localStorage.setItem('refreshToken', data.refresh_token) // Обновляем refresh token в localStorage
+            authStore.setTokens(data.access_token, data.refresh_token); // Используем метод setTokens из authStore
+            // localStorage.setItem('token', data.access_token) // Эти строки теперь не нужны, так как setTokens их обрабатывает
+            // localStorage.setItem('refreshToken', data.refresh_token) //
 
             // Notify all subscribers that the token has been refreshed
-            onRefreshed(data.access)
+            onRefreshed(data.access_token) // Передаем access_token, а не data.access
             isRefreshing = false
 
             // Retry the original request with the new token
             // Убедимся, что Authorization заголовок обновлен для originalRequest
-            originalRequest.headers.Authorization = `Bearer ${data.access}`
+            originalRequest.headers.Authorization = `Bearer ${data.access_token}`
             return api(originalRequest)
           } catch (err) {
             // If refresh fails, log the user out and redirect to login page
             isRefreshing = false
             authStore.logout() // Ensure logout logic is correct in your store
+            // Осторожно с window.location.href = '/login' - это может сломать SPA
+            // Лучше использовать router.push('/login') если есть доступ к роутеру
+            console.error('Failed to refresh token, logging out:', err);
             window.location.href = '/login' // Redirect to login page
             return Promise.reject(err)
           }
