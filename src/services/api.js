@@ -18,7 +18,7 @@ export const setApiBaseURL = (url) => {
 
 export const setRefreshTokenBaseURL = (url) => {
   refreshTokenBaseURL = url;
-  console.log('Refresh Token API baseURL updated to:', refreshTokenBaseURL);
+  console.log('Refresh Token API baseURL updated to:', refreshTokenBaseTokenBaseURL);
 }
 
 const subscribeTokenRefresh = (callback) => {
@@ -43,12 +43,13 @@ api.interceptors.response.use(
     async (error) => {
       const originalRequest = error.config
 
+      // If the error is 401 and it's not a retry AND a refresh token exists
       if (
           error.response?.status === 401 &&
           !originalRequest._retry &&
           localStorage.getItem('refreshToken')
       ) {
-        originalRequest._retry = true
+        originalRequest._retry = true // Mark the original request as retried
 
         if (!isRefreshing) {
           isRefreshing = true
@@ -57,9 +58,16 @@ api.interceptors.response.use(
           const oldRefreshToken = localStorage.getItem('refreshToken');
 
           try {
-            const { data } = await axios.post(`${refreshTokenBaseURL}/auth/refresh`, {
+            // Create a new Axios instance *without* the interceptor for the refresh request itself
+            // This prevents the refresh request from recursively trying to refresh
+            const refreshInstance = axios.create({
+              baseURL: refreshTokenBaseURL,
+              withCredentials: true,
+            });
+
+            const { data } = await refreshInstance.post('/auth/refresh', { // Use refreshInstance
               refresh_token: oldRefreshToken,
-            })
+            });
 
             authStore.setTokens(data.access_token, data.refresh_token);
 
@@ -73,7 +81,7 @@ api.interceptors.response.use(
             isRefreshing = false
 
             originalRequest.headers.Authorization = `Bearer ${data.access_token}`
-            return api(originalRequest)
+            return api(originalRequest) // Retry the original request with the new token
           } catch (err) {
             isRefreshing = false
             authStore.logout()
@@ -83,6 +91,7 @@ api.interceptors.response.use(
           }
         }
 
+        // If a refresh is already in progress, queue the original request
         return new Promise((resolve) => {
           subscribeTokenRefresh((newToken) => {
             originalRequest.headers.Authorization = `Bearer ${newToken}`
@@ -91,6 +100,7 @@ api.interceptors.response.use(
         })
       }
 
+      // If it's not a 401 or it's a 401 but already retried, or no refresh token, reject the error
       return Promise.reject(error)
     },
 )
