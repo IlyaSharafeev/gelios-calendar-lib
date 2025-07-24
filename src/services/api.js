@@ -57,15 +57,15 @@ api.interceptors.response.use(
           try {
             // Attempt to refresh the token using the refresh token from localStorage
             // Убедитесь, что baseURL используется для запроса обновления токена
-            const { data } = await axios.post(`${api.defaults.baseURL}/auth/refresh-token`, {
-              refresh: localStorage.getItem('refreshToken'),
+            const { data } = await axios.post(`${api.defaults.baseURL}/auth/refresh`, {
+              refresh_token: localStorage.getItem('refreshToken'),
             })
 
             // Update the token in the auth store and localStorage
-            authStore.token = data.access // Обновляем access token в authStore
-            authStore.refreshToken = data.refresh // Обновляем refresh token в authStore
-            localStorage.setItem('token', data.access) // Обновляем access token в localStorage
-            localStorage.setItem('refreshToken', data.refresh) // Обновляем refresh token в localStorage
+            authStore.token = data.access_token // Обновляем access token в authStore
+            authStore.refreshToken = data.refresh_token // Обновляем refresh token в authStore
+            localStorage.setItem('token', data.access_token) // Обновляем access token в localStorage
+            localStorage.setItem('refreshToken', data.refresh_token) // Обновляем refresh token в localStorage
 
             // Notify all subscribers that the token has been refreshed
             onRefreshed(data.access)
