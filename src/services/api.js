@@ -1,4 +1,4 @@
-\import axios from 'axios'
+import axios from 'axios'
 import authStore from "../store/authStore.js";
 
 const api = axios.create({
