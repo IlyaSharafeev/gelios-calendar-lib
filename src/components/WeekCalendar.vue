@@ -382,7 +382,7 @@ onMounted(() => {
 }
 
 .icon-plus {
-  background-image: url('@/assets/icons/plus.svg');
+  background-image: url('../assets/icons/plus.svg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
