@@ -291,7 +291,7 @@ onMounted(() => {
             >
               <div class="add-lesson-wrapper">
                 <div class="add-lesson" @click="addLesson(day.fullDate, hour - 1)">
-<!--                  <div class="icon-plus"></div>-->
+                  <div class="icon-plus"></div>
                   Занятие
                 </div>
               </div>
@@ -382,7 +382,7 @@ onMounted(() => {
 }
 
 .icon-plus {
-  background-image: url('@/assets/icons/plus.svg');
+  background-image: url('../assets/icons/plus.svg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
