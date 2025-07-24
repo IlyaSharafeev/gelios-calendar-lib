@@ -4,7 +4,7 @@ import authStore from "../store/authStore.js";
 // Инициализируем Axios без baseURL или с временным значением.
 // baseURL будет установлен динамически из родительского окна.
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/', // Используем VITE_API_URL как запасной вариант или '/'
+  baseURL: import.meta.env.VITE_API_URL_BACKEND || '/', // Используем VITE_API_URL как запасной вариант или '/'
   withCredentials: true,
 })
 
