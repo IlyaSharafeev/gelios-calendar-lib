@@ -6,7 +6,7 @@ const authStore = reactive({
     refreshToken: localStorage.getItem('refreshToken') || null, //
 
     setTokens(accessToken, refreshToken) { //
-        this.token = accessToken; //
+        this.token = accessToken;
         this.refreshToken = refreshToken; //
         localStorage.setItem('token', accessToken); //
         localStorage.setItem('refreshToken', refreshToken); //

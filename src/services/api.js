@@ -64,6 +64,9 @@ api.interceptors.response.use(
         if (!isRefreshing) {
           isRefreshing = true
 
+          // Сохраняем старый токен для логирования
+          const oldAccessToken = authStore.token;
+
           try {
             // !!! ИСПОЛЬЗУЕМ ОТДЕЛЬНЫЙ refreshTokenBaseURL ДЛЯ ЗАПРОСА ОБНОВЛЕНИЯ ТОКЕНА !!!
             const { data } = await axios.post(`${refreshTokenBaseURL}/auth/refresh`, {
@@ -72,8 +75,13 @@ api.interceptors.response.use(
 
             // Update the token in the auth store and localStorage
             authStore.setTokens(data.access_token, data.refresh_token); // Используем метод setTokens из authStore
-            // localStorage.setItem('token', data.access_token) // Эти строки теперь не нужны, так как setTokens их обрабатывает
-            // localStorage.setItem('refreshToken', data.refresh_token) //
+
+            // Логируем старый и новый токены
+            console.log('Token refreshed:');
+            console.log('  Old Access Token:', oldAccessToken ? oldAccessToken.substring(0, 10) + '...' : 'N/A'); // Обрезаем для читаемости
+            console.log('  New Access Token:', data.access_token ? data.access_token.substring(0, 10) + '...' : 'N/A'); // Обрезаем для читаемости
+            console.log('  Old Refresh Token:', localStorage.getItem('refreshToken') ? localStorage.getItem('refreshToken').substring(0, 10) + '...' : 'N/A'); // Если вы хотите логировать и старый рефреш
+            console.log('  New Refresh Token:', data.refresh_token ? data.refresh_token.substring(0, 10) + '...' : 'N/A'); // Если вы хотите логировать и новый рефреш
 
             // Notify all subscribers that the token has been refreshed
             onRefreshed(data.access_token) // Передаем access_token, а не data.access
