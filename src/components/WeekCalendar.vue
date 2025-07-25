@@ -289,12 +289,12 @@ onMounted(() => {
                 :key="day.date + hour"
                 class="min-h-[88px] bg-white rounded-xl"
             >
-              <div class="add-lesson-wrapper">
-                <div class="add-lesson" @click="addLesson(day.fullDate, hour - 1)">
-                  <div class="icon-plus"></div>
-                  Занятие
-                </div>
-              </div>
+<!--              <div class="add-lesson-wrapper">-->
+<!--                <div class="add-lesson" @click="addLesson(day.fullDate, hour - 1)">-->
+<!--                  <div class="icon-plus"></div>-->
+<!--                  Занятие-->
+<!--                </div>-->
+<!--              </div>-->
               <slot
                   name="calendarItem"
                   v-for="record in displayRecords(day.fullDate, hour - 1)"
