@@ -21,21 +21,21 @@ const teacher = computed(() => `${props.item.teacher.lastName} ${props.item.teac
 
 const isFrozen = computed(() => props.item.isFrozen)
 
+// The 'emit' definition is no longer needed for the click event, but we can keep it for future use.
 const emit = defineEmits(['itemClick'])
 </script>
 
 <template>
   <div
-    class="flex items-center justify-between px-3 py-2.5 cursor-pointer transition-colors rounded-xl"
-    :class="{
+      class="flex items-center justify-between px-3 py-2.5 cursor-pointer transition-colors rounded-xl"
+      :class="{
       'bg-gred-5 hover:cursor-not-allowed': isFrozen,
       'hover:bg-gblue-5': !isFrozen
     }"
-    @click="$emit('itemClick', item)"
   >
     <div
-      class="flex items-center text-xs font-medium rounded-full px-2 py-1"
-      :class="{
+        class="flex items-center text-xs font-medium rounded-full px-2 py-1"
+        :class="{
         'text-gred-100 bg-gred-10': isFrozen,
         'text-gblue-100 bg-gblue-5': !isFrozen
       }"
