@@ -253,17 +253,14 @@ onMounted(() => {
         const { accessToken, refreshToken } = event.data;
         if (accessToken) {
           authStore.setTokens(accessToken, refreshToken);
-          console.log('Tokens received and set from parent iframe message.');
         }
       } else if (event.data.type === 'SET_API_BASE_URL') {
         const { baseURL, refreshTokenURL } = event.data; // Предполагаем, что родитель может передать оба
         if (baseURL) {
           setApiBaseURL(baseURL); // Устанавливаем основной baseURL
-          console.log('API baseURL received and set from parent iframe message:', baseURL);
         }
         if (refreshTokenURL) { // Если родитель передал отдельный URL для рефреша
           setRefreshTokenBaseURL(refreshTokenURL); // Устанавливаем его
-          console.log('Refresh Token API baseURL received and set from parent iframe message:', refreshTokenURL);
         }
       } else if (event.data.type === 'SET_VIEW_MODE') {
         if (event.data.viewMode) {
