@@ -43,6 +43,7 @@ const router = useRouter()
 const route = useRoute()
 
 const instance = ref({ data: [], total: 0 })
+const viewMode = ref(null);
 
 const dateRange = ref({startDate: null, endDate: null})
 
@@ -110,7 +111,6 @@ const processSchedulesAndFreezes = (
   const startDate = parse(dateRange.value.startDate, 'yyyy-MM-dd', new Date());
   const endDate = parse(dateRange.value.endDate, 'yyyy-MM-dd', new Date());
   const calendarItems: CalendarItem[] = [];
-  const viewMode = ref(null);
 
   // Generate all dates in the range
   const allDatesInRange: Date[] = [];
