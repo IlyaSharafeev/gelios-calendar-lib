@@ -265,6 +265,7 @@ onMounted(() => {
       } else if (event.data.type === 'SET_VIEW_MODE') {
         if (event.data.viewMode) {
           viewMode.value = event.data.viewMode;
+          localStorage.setItem('viewMode', event.data.viewMode);
           console.log('View mode set from parent:', viewMode.value);
         }
       }
