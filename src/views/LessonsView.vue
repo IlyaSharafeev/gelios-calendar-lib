@@ -110,6 +110,7 @@ const processSchedulesAndFreezes = (
   const startDate = parse(dateRange.value.startDate, 'yyyy-MM-dd', new Date());
   const endDate = parse(dateRange.value.endDate, 'yyyy-MM-dd', new Date());
   const calendarItems: CalendarItem[] = [];
+  const viewMode = ref(null);
 
   // Generate all dates in the range
   const allDatesInRange: Date[] = [];
@@ -263,6 +264,11 @@ onMounted(() => {
         if (refreshTokenURL) { // Если родитель передал отдельный URL для рефреша
           setRefreshTokenBaseURL(refreshTokenURL); // Устанавливаем его
           console.log('Refresh Token API baseURL received and set from parent iframe message:', refreshTokenURL);
+        }
+      } else if (event.data.type === 'SET_VIEW_MODE') {
+        if (event.data.viewMode) {
+          viewMode.value = event.data.viewMode;
+          console.log('View mode set from parent:', viewMode.value);
         }
       }
     }
