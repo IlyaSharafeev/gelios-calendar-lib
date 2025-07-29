@@ -30,6 +30,10 @@ const props = defineProps({
     type: String,
     default: 'id'
   },
+  viewMode: {
+    type: String,
+    default: null
+  }
 })
 
 const emit = defineEmits(['weekChange', 'itemClick'])
@@ -92,6 +96,23 @@ const formatDateRange = computed(() => {
 })
 
 // --- Methods ---
+
+const handleItemClick = (item: any) => {
+  if (props.viewMode === 'teacher') {
+    const childName = `${item.child.lastName} ${item.child.firstName.charAt(0)}.`;
+    const direction = item.direction[locale.value];
+    const time = `${item.time.start} - ${item.time.end}`;
+
+    const confirmationMessage = `Вы хотите перейти на урок для ученика ${childName} по направлению "${direction}" (${time})?`;
+
+    if (window.confirm(confirmationMessage)) {
+      emit('itemClick', item);
+    }
+  } else {
+    openLessonActionsModal(item);
+  }
+};
+
 
 // New function to scroll the calendar horizontally
 const scrollHorizontally = (direction: 'left' | 'right') => {
@@ -289,18 +310,12 @@ onMounted(() => {
                 :key="day.date + hour"
                 class="min-h-[88px] bg-white rounded-xl"
             >
-<!--              <div class="add-lesson-wrapper">-->
-<!--                <div class="add-lesson" @click="addLesson(day.fullDate, hour - 1)">-->
-<!--                  <div class="icon-plus"></div>-->
-<!--                  Занятие-->
-<!--                </div>-->
-<!--              </div>-->
               <slot
                   name="calendarItem"
                   v-for="record in displayRecords(day.fullDate, hour - 1)"
                   :key="record[props.idField]"
                   :item="record"
-                  @click="openLessonActionsModal(record)" ></slot>
+                  @click="handleItemClick(record)" ></slot>
 
               <div
                   v-if="hasMoreRecords(day.fullDate, hour - 1)"

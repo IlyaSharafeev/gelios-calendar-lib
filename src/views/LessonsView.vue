@@ -43,13 +43,15 @@ const router = useRouter()
 const route = useRoute()
 
 const instance = ref({ data: [], total: 0 })
-const viewMode = ref(null);
+const viewMode = ref(localStorage.getItem('viewMode') || null);
 
 const dateRange = ref({startDate: null, endDate: null})
 
-// Handle schedule click
+// Handle schedule click for navigation
 const handleScheduleClick = (schedule) => {
-  console.log('Clicked schedule:', schedule)
+  // TODO: Implement navigation to the specific lesson page
+  console.log('Переход к уроку (навигация):', schedule)
+  // Example: router.push({ name: 'lesson-details', params: { id: schedule.id } });
 }
 
 // Simplified mapping of day names to JavaScript day numbers (0-6)
@@ -290,12 +292,13 @@ onMounted(() => {
       <WeekCalendar
           :calendar-items="instance.data"
           date-field="lessonDate"
+          :view-mode="viewMode"
           @week-change="handleWeekChange"
+          @item-click="handleScheduleClick"
       >
         <template #calendarItem="{ item }">
           <LessonScheduleCalendarCell
               :item="item"
-              @item-click="handleScheduleClick"
           />
         </template>
       </WeekCalendar>
