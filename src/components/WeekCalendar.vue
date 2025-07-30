@@ -100,7 +100,7 @@ const formatDateRange = computed(() => {
 const handleItemClick = (item: any) => {
   console.log(item, "Handle click")
   if (props.viewMode === 'teacher') {
-    openLessonActionsModal(item);
+    openLessonActionsModal(item, 'teacher');
   } else {
     openLessonActionsModal(item);
   }
