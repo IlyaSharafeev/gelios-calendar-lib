@@ -99,6 +99,7 @@ const formatDateRange = computed(() => {
 
 const handleItemClick = (item: any) => {
   if (props.viewMode === 'teacher') {
+    console.log("props proshel")
     const childName = `${item.child.lastName} ${item.child.firstName.charAt(0)}.`;
     const direction = item.direction[locale.value];
     const time = `${item.time.start} - ${item.time.end}`;
