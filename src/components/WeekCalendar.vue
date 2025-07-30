@@ -98,6 +98,7 @@ const formatDateRange = computed(() => {
 // --- Methods ---
 
 const handleItemClick = (item: any) => {
+  console.log(item, "Handle click")
   if (props.viewMode === 'teacher') {
     console.log("props proshel")
     const childName = `${item.child.lastName} ${item.child.firstName.charAt(0)}.`;
