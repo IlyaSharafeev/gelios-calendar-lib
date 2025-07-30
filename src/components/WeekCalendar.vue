@@ -98,21 +98,11 @@ const formatDateRange = computed(() => {
 // --- Methods ---
 
 const handleItemClick = (item: any) => {
-  console.log(item, "Handle click")
-  if (props.viewMode === 'teacher') {
-    console.log("props proshel")
-    const childName = `${item.child.lastName} ${item.child.firstName.charAt(0)}.`;
-    const direction = item.direction[locale.value];
-    const time = `${item.time.start} - ${item.time.end}`;
-
-    const confirmationMessage = `Вы хотите перейти на урок для ученика ${childName} по направлению "${direction}" (${time})?`;
-
-    if (window.confirm(confirmationMessage)) {
-      emit('itemClick', item);
-    }
-  } else {
-    openLessonActionsModal(item);
-  }
+  // Now, for any view mode (including 'teacher'), clicking a lesson
+  // will open the actions modal. This modal contains the "join lesson"
+  // button and other actions.
+  console.log("itemClick", item)
+  openLessonActionsModal(item);
 };
 
 
@@ -312,12 +302,16 @@ onMounted(() => {
                 :key="day.date + hour"
                 class="min-h-[88px] bg-white rounded-xl"
             >
-              <slot
-                  name="calendarItem"
+              <div
                   v-for="record in displayRecords(day.fullDate, hour - 1)"
                   :key="record[props.idField]"
-                  :item="record"
-                  @click="handleItemClick(record)" ></slot>
+                  @click="handleItemClick(record)"
+              >
+                <slot
+                    name="calendarItem"
+                    :item="record"
+                ></slot>
+              </div>
 
               <div
                   v-if="hasMoreRecords(day.fullDate, hour - 1)"
