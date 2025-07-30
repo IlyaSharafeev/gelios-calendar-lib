@@ -98,11 +98,12 @@ const formatDateRange = computed(() => {
 // --- Methods ---
 
 const handleItemClick = (item: any) => {
-  // Now, for any view mode (including 'teacher'), clicking a lesson
-  // will open the actions modal. This modal contains the "join lesson"
-  // button and other actions.
-  console.log("itemClick", item)
-  openLessonActionsModal(item);
+  console.log(item, "Handle click")
+  if (props.viewMode === 'teacher') {
+    openLessonActionsModal(item);
+  } else {
+    openLessonActionsModal(item);
+  }
 };
 
 
