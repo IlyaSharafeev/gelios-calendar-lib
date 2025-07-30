@@ -356,10 +356,12 @@ onMounted(() => {
   <LessonActionsModal
       :is-open="isLessonActionsModalOpen"
       :lesson="selectedLesson"
+      :view-mode="props.viewMode"
       @close="handleLessonActionsModalClose"
       @go-to-lesson="handleGoToLesson"
       @cancel-lesson="handleCancelLesson"
-      @reschedule-success="handleRescheduleSuccess" @change-teacher="handleChangeTeacher"
+      @reschedule-success="handleRescheduleSuccess"
+      @change-teacher="handleChangeTeacher"
   />
 </template>
 
