@@ -11,7 +11,7 @@ import { useStudentScheduleStore } from '../store/studentScheduleStore.js'
 import BaseFilterPanel from '../components/BaseFilterPanel.vue'
 import WeekCalendar from '../components/WeekCalendar.vue'
 import LessonScheduleCalendarCell from '../components/LessonScheduleCalendarCell.vue'
-import { authStore } from '../store/authStore.js';
+import authStore from '../store/authStore.js';
 
 // Type definitions for better clarity
 interface Schedule {
