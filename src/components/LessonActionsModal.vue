@@ -17,20 +17,18 @@ const props = defineProps({
     type: Object,
     default: null
   },
-  // 1. Добавлен новый prop для получения режима отображения
   viewMode: {
     type: String,
-    default: null // null, 'teacher', or 'student'
+    default: null
   }
 });
 
-const emit = defineEmits(['close', 'goToLesson', 'cancelLesson', 'rescheduleSuccess', 'changeTeacherSuccess']);
+// ИЗМЕНЕНО: Эмит 'goToLesson' больше не нужен, так как навигация обрабатывается ссылкой
+const emit = defineEmits(['close', 'cancelLesson', 'rescheduleSuccess', 'changeTeacherSuccess']);
 
-// Internal state to manage modal views: 'actions', 'reschedule', or 'change-teacher'
 const currentView = ref('actions');
 const isClosing = ref(false);
 
-// Reactive data for the lesson being edited/rescheduled/teacher-changed
 const editableLesson = ref({
   id: null,
   lessonDate: null,
@@ -86,10 +84,13 @@ const close = () => {
   emit('close');
 };
 
+// ИЗМЕНЕНО: Эта функция больше не нужна, так как заменена на тег <a>
+/*
 const goToLesson = () => {
   emit('goToLesson', props.lesson);
   close();
 };
+*/
 
 const cancelLesson = () => {
   emit('cancelLesson', props.lesson);
@@ -203,21 +204,26 @@ const lessonTimeFormatted = computed(() => {
   <div v-if="isOpen" class="modal-overlay" :class="{ 'modal-closing': isClosing }" @click.self="close">
     <div class="modal-content" :class="{ 'animate-fade-in-up-custom': !isClosing }">
       <div v-if="isActionsView" class="action-buttons-container">
-        <button v-if="viewMode === 'teacher' || !viewMode" class="action-button primary-button" @click="goToLesson">
+
+        <a v-if="(viewMode === 'teacher' || !viewMode) && props.lesson && props.lesson.link"
+           :href="props.lesson.link"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="action-button primary-button"
+           @click="close"
+        >
           <svg width="17" height="16" viewBox="0 0 17 16" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_297_17423)"><path d="M9.68611 4.79656C10.1353 4.71331 10.5518 4.50461 10.8873 4.19459C11.2229 3.88458 11.4639 3.48591 11.5823 3.04469C11.7008 2.60347 11.692 2.13773 11.5569 1.70132C11.4218 1.26491 11.1659 0.875656 10.8188 0.578582C10.4717 0.281508 10.0476 0.0887442 9.59561 0.0225832C9.14357 -0.0435778 8.68204 0.0195663 8.26439 0.204713C7.84674 0.38986 7.49003 0.689447 7.23551 1.06883C6.98098 1.44821 6.83905 1.89189 6.82611 2.34856H8.00411C8.93311 2.34856 9.68611 3.10156 9.68611 4.03056V4.79656ZM5.39111 12.5346H8.00411C8.93311 12.5346 9.68611 11.7816 9.68611 10.8526V5.57956H12.4691C12.6544 5.58427 12.8303 5.66231 12.9582 5.79654C13.086 5.93077 13.1554 6.11023 13.1511 6.29556V10.5896C13.1769 11.7014 12.7603 12.778 11.9929 13.5829C11.2255 14.3879 10.1699 14.8553 9.05811 14.8826C7.44011 14.8426 6.05811 13.8926 5.39111 12.5326V12.5346ZM16.1281 3.16256C16.1281 3.38245 16.0848 3.6002 16.0006 3.80336C15.9165 4.00652 15.7932 4.19111 15.6377 4.34661C15.4822 4.5021 15.2976 4.62544 15.0944 4.70959C14.8913 4.79374 14.6735 4.83706 14.4536 4.83706C14.2337 4.83706 14.016 4.79374 13.8128 4.70959C13.6097 4.62544 13.4251 4.5021 13.2696 4.34661C13.1141 4.19111 12.9907 4.00652 12.9066 3.80336C12.8224 3.6002 12.7791 3.38245 12.7791 3.16256C12.7791 2.71845 12.9555 2.29254 13.2696 1.97851C13.5836 1.66448 14.0095 1.48806 14.4536 1.48806C14.8977 1.48806 15.3236 1.66448 15.6377 1.97851C15.9517 2.29254 16.1281 2.71845 16.1281 3.16256ZM13.8901 12.6506L13.7701 12.6486C14.0369 11.9917 14.1665 11.2873 14.1511 10.5786V6.30556C14.155 6.0558 14.1038 5.80827 14.0011 5.58056H15.7931C16.1831 5.58056 16.5001 5.89756 16.5001 6.28756V10.0526C16.4996 10.7414 16.2257 11.4019 15.7386 11.889C15.2515 12.3761 14.591 12.65 13.9021 12.6506H13.8901Z" fill="white"/><path d="M1.182 3.34866H8.004C8.381 3.34866 8.686 3.65366 8.686 4.03066V10.8527C8.68627 10.9423 8.66881 11.0311 8.63463 11.114C8.60045 11.1968 8.55022 11.2721 8.48684 11.3355C8.42346 11.3989 8.34817 11.4491 8.26531 11.4833C8.18244 11.5175 8.09364 11.5349 8.004 11.5347H1.182C1.09237 11.5349 1.00356 11.5175 0.920701 11.4833C0.837838 11.4491 0.76255 11.3989 0.699167 11.3355C0.635785 11.2721 0.58556 11.1968 0.551379 11.114C0.517199 11.0311 0.499739 10.9423 0.500003 10.8527V4.02966C0.500003 3.65266 0.805003 3.34866 1.182 3.34866ZM6.388 5.94466V5.22466H2.798V5.94466H4.155V9.65966H5.025V5.94466H6.388Z" fill="white"/></g><defs><clipPath id="clip0_297_17423"><rect width="16" height="16" fill="white" transform="translate(0.5)"/></clipPath></defs></svg>
           {{ t('lesson.go-to-lesson') }}
-        </button>
+        </a>
 
         <button v-if="viewMode === 'student' || !viewMode" class="action-button danger-text-button" @click="cancelLesson">
           <Icon icon="material-symbols:close-rounded" width="20" height="20" />
           {{ t('lesson.cancel-lesson') }}
         </button>
-
         <button v-if="!viewMode" class="action-button primary-text-button" @click="switchToRescheduleView">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.5 7.50033H6.25C4.17893 7.50033 2.5 9.17926 2.5 11.2503C2.5 13.3214 4.17893 15.0003 6.25 15.0003H10M17.5 7.50033L14.1667 4.16699M17.5 7.50033L14.1667 10.8337" stroke="#0066FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           {{ t('lesson.reschedule-lesson') }}
         </button>
-
         <button v-if="!viewMode" class="action-button primary-text-button" @click="switchToChangeTeacherView">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15.7275 5.83398C14.4396 4.0662 12.3533 2.91732 9.9987 2.91732C6.08668 2.91732 2.91536 6.08863 2.91536 10.0007L2.91536 10.4173M17.082 10.0007C17.082 13.9127 13.9107 17.084 9.9987 17.084C7.64408 17.084 5.55781 15.9351 4.26986 14.1673M18.6654 10.834L16.9987 9.16732L15.332 10.834M4.66536 9.16732L2.9987 10.834L1.33203 9.16732" stroke="#0066FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           {{ t('lesson.change-teacher') }}
