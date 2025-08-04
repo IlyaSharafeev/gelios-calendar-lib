@@ -6,7 +6,7 @@ import api, { setApiBaseURL, setRefreshTokenBaseURL } from '../services/api.js'
 import { format, parse, isWithinInterval } from 'date-fns'
 
 // Импортируем новый стор для расписания учителя
-import { useTeacherScheduleStore } from '../store/teacherScheduleStore.js'
+import { useTeacherScheduleStore } from '../store/teacherScheduleStore'
 
 import BaseFilterPanel from '../components/BaseFilterPanel.vue'
 import WeekCalendar from '../components/WeekCalendar.vue'
@@ -195,10 +195,10 @@ const fetch = async () => {
       const params = {
         start_date: dateRange.value.startDate,
         end_date: dateRange.value.endDate,
-        // Вы можете добавить сюда другие параметры фильтрации для учителя, если они нужны
+        // Параметр 'search' может быть полезен и для учителя (например, поиск по имени ученика)
         search: route.query.search || null,
-        child_id: route.query.child_id || null,
       };
+      // Вызываем экшен, который делает запрос на https://gelios-teacher.ddns.net/api/teacher/schedule
       await teacherScheduleStore.fetchTeacherSchedule(params);
 
       // Расписание учителя не содержит данных о заморозках, поэтому передаем пустой массив
