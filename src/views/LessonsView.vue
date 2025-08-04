@@ -5,8 +5,8 @@ import { useRouter, useRoute } from 'vue-router'
 import api, { setApiBaseURL, setRefreshTokenBaseURL } from '../services/api.js'
 import { format, parse, isWithinInterval } from 'date-fns'
 
-// Импортируем новый стор для расписания учителя
-import { useTeacherScheduleStore } from '../store/teacherScheduleStore'
+// ИСПРАВЛЕНО: Добавлено расширение .js для консистентности и надежности
+import { useTeacherScheduleStore } from '../store/teacherScheduleStore.js'
 
 import BaseFilterPanel from '../components/BaseFilterPanel.vue'
 import WeekCalendar from '../components/WeekCalendar.vue'
