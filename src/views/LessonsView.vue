@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import {onMounted, ref, watch} from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-// Импортируем обе функции
-import api, { setApiBaseURL, setRefreshTokenBaseURL } from '../services/api.js'
+// Убраны импорты старого api, так как они больше не нужны здесь
 import { format, parse, isWithinInterval } from 'date-fns'
 
-// ИСПРАВЛЕНО: Добавлено расширение .js для консистентности и надежности
+// Импортируем оба стора
 import { useTeacherScheduleStore } from '../store/teacherScheduleStore.js'
+import { useStudentScheduleStore } from '../store/studentScheduleStore.js'
 
 import BaseFilterPanel from '../components/BaseFilterPanel.vue'
 import WeekCalendar from '../components/WeekCalendar.vue'
 import LessonScheduleCalendarCell from '../components/LessonScheduleCalendarCell.vue'
-import authStore from '../store/authStore.js';
+import { authStore } from '../store/authStore.js';
 
 // Type definitions for better clarity
 interface Schedule {
@@ -26,6 +26,8 @@ interface Schedule {
   startDate: string | null;
 }
 
+// NOTE: Логика заморозок (freezes) пока отключена, так как для нового API
+// не предоставлен отдельный эндпоинт для них.
 interface Freeze {
   id: number;
   childCourse: number;
@@ -45,8 +47,9 @@ interface CalendarItem extends Schedule {
 const router = useRouter()
 const route = useRoute()
 
-// Инициализируем стор расписания учителя
+// Инициализируем оба стора
 const teacherScheduleStore = useTeacherScheduleStore();
+const studentScheduleStore = useStudentScheduleStore();
 
 const instance = ref({ data: [], total: 0 })
 const viewMode = ref(localStorage.getItem('viewMode') || null);
@@ -55,53 +58,12 @@ const dateRange = ref({startDate: null, endDate: null})
 
 // Handle schedule click for navigation
 const handleScheduleClick = (schedule) => {
-  // TODO: Implement navigation to the specific lesson page
   console.log('Переход к уроку (навигация):', schedule)
-  // Example: router.push({ name: 'lesson-details', params: { id: schedule.id } });
 }
 
 // Simplified mapping of day names to JavaScript day numbers (0-6)
 const DAY_NAME_TO_JS_DAY = {
-  'MONDAY': 1,
-  'TUESDAY': 2,
-  'WEDNESDAY': 3,
-  'THURSDAY': 4,
-  'FRIDAY': 5,
-  'SATURDAY': 6,
-  'SUNDAY': 0
-};
-
-/**
- * Determines if a specific child course is frozen on a given date
- */
-const isCourseFrozenOnDate = (
-    freezes: Freeze[],
-    childCourseId: number,
-    date: Date
-): boolean => {
-  // Find any freeze period that matches the course and contains the date
-  return freezes.some(freeze => {
-    // Skip if not for this course
-    if (freeze.childCourse !== childCourseId) {
-      return false;
-    }
-
-    // Skip if missing date information
-    if (!freeze.startDate || !freeze.endDate) {
-      return false;
-    }
-
-    try {
-      // Parse dates and check if the target date is within the freeze period
-      const freezeStart = parse(freeze.startDate, 'yyyy-MM-dd', new Date());
-      const freezeEnd = parse(freeze.endDate, 'yyyy-MM-dd', new Date());
-
-      return isWithinInterval(date, { start: freezeStart, end: freezeEnd });
-    } catch (err) {
-      console.warn(`Error checking freeze dates for course ${childCourseId}:`, err);
-      return false;
-    }
-  });
+  'MONDAY': 1, 'TUESDAY': 2, 'WEDNESDAY': 3, 'THURSDAY': 4, 'FRIDAY': 5, 'SATURDAY': 6, 'SUNDAY': 0
 };
 
 /**
@@ -109,9 +71,8 @@ const isCourseFrozenOnDate = (
  */
 const processSchedulesAndFreezes = (
     schedules: Schedule[],
-    freezes: Freeze[]
+    freezes: Freeze[] // Принимаем заморозки, но сейчас они всегда будут пустым массивом
 ) => {
-  // Ensure we have valid date range
   if (!dateRange.value.startDate || !dateRange.value.endDate) {
     return { data: [], total: 0 };
   }
@@ -120,7 +81,6 @@ const processSchedulesAndFreezes = (
   const endDate = parse(dateRange.value.endDate, 'yyyy-MM-dd', new Date());
   const calendarItems: CalendarItem[] = [];
 
-  // Generate all dates in the range
   const allDatesInRange: Date[] = [];
   let currentDate = new Date(startDate);
 
@@ -129,44 +89,29 @@ const processSchedulesAndFreezes = (
     currentDate.setDate(currentDate.getDate() + 1);
   }
 
-  // For each schedule, find all matching dates and create calendar items
   schedules.forEach(schedule => {
     const scheduleDayNumber = DAY_NAME_TO_JS_DAY[schedule.dayOfWeek];
+    const matchingDates = allDatesInRange.filter(date => date.getDay() === scheduleDayNumber);
 
-    // Find all dates that match this schedule's day of week
-    const matchingDates = allDatesInRange.filter(date =>
-        date.getDay() === scheduleDayNumber
-    );
-
-    // Create a calendar item for each matching date
     matchingDates.forEach(date => {
-      // Skip if the course hasn't started yet for this date
       if (schedule.startDate) {
         const scheduleStartDate = parse(schedule.startDate, 'yyyy-MM-dd', new Date());
-        if (date < scheduleStartDate) {
-          return; // Skip this date if it's before the course starts
-        }
+        if (date < scheduleStartDate) return;
       }
 
-      // Check if this course is frozen on this date
-      const isFrozen = isCourseFrozenOnDate(freezes, schedule.childCourse, date);
+      // Поскольку эндпоинта для заморозок нет, считаем что заморозок нет
+      const isFrozen = false;
 
-      // Create the scheduled date with time from the schedule
       const scheduledStartDate = new Date(date);
       const startTimeParts = (schedule.startTime || '00:00:00').split(':');
-      scheduledStartDate.setHours(parseInt(startTimeParts[0], 10));
-      scheduledStartDate.setMinutes(parseInt(startTimeParts[1], 10));
+      scheduledStartDate.setHours(parseInt(startTimeParts[0], 10), parseInt(startTimeParts[1], 10));
 
       const scheduledEndDate = new Date(date);
       const endTimeParts = (schedule.endTime || '00:00:00').split(':');
-      scheduledEndDate.setHours(parseInt(endTimeParts[0], 10));
-      scheduledEndDate.setMinutes(parseInt(endTimeParts[1], 10));
+      scheduledEndDate.setHours(parseInt(endTimeParts[0], 10), parseInt(endTimeParts[1], 10));
 
-      // Add to our calendar items
       calendarItems.push({
-        ...schedule,
-        isFrozen,
-        lessonDate: scheduledStartDate,
+        ...schedule, isFrozen, lessonDate: scheduledStartDate,
         time: {
           start: format(new Date(scheduledStartDate), 'HH:mm'),
           end: format(new Date(scheduledEndDate), 'HH:mm')
@@ -179,71 +124,35 @@ const processSchedulesAndFreezes = (
 };
 
 const fetch = async () => {
-  // Проверяем, есть ли токен, прежде чем делать запрос
-  if (!authStore.token) {
-    console.warn("Auth token not set. Waiting for postMessage from parent.");
+  if (!authStore.token || !dateRange.value.startDate) {
     return;
   }
 
-  if (!dateRange.value.startDate || !dateRange.value.endDate) {
-    return
-  }
-
   try {
-    // --- Логика для режима УЧИТЕЛЯ ---
     if (viewMode.value === 'teacher') {
       const params = {
         start_date: dateRange.value.startDate,
         end_date: dateRange.value.endDate,
-        // Параметр 'search' может быть полезен и для учителя (например, поиск по имени ученика)
         search: route.query.search || null,
       };
-      // Вызываем экшен, который делает запрос на https://gelios-teacher.ddns.net/api/teacher/schedule
       await teacherScheduleStore.fetchTeacherSchedule(params);
-
-      // Расписание учителя не содержит данных о заморозках, поэтому передаем пустой массив
+      // Обрабатываем данные, передавая пустой массив для заморозок
       instance.value = processSchedulesAndFreezes(teacherScheduleStore.schedule, []);
 
-    } else { // --- Логика для режима СТУДЕНТА (или по умолчанию) ---
-      // Проверяем, установлен ли baseURL для студента
-      if (!api.defaults.baseURL) {
-        console.warn("API baseURL for student not set. Waiting for postMessage from parent.");
-        return;
-      }
-
-      // Create the base params object
-      const baseParams = {
+    } else { // Логика для режима СТУДЕНТА
+      const params = {
+        start_date: dateRange.value.startDate,
+        end_date: dateRange.value.endDate,
         search: route.query.search || null,
         child_id: route.query.child_id || null,
         teacher_id: route.query.teacher_id || null,
-      }
-
-      const scheduleParams = {
-        ...baseParams,
-        status: 'ACTIVE',
-        start_date: dateRange.value.startDate,
-        end_date: dateRange.value.endDate,
-      }
-
-      const freezeParams = {
-        ...baseParams,
-        start_date: dateRange.value.startDate,
-        end_date: dateRange.value.endDate,
-      }
-
-      const [schedulesResponse, freezesResponse] = await Promise.all([
-        api.get('/education/v1/lesson-schedules', { params: scheduleParams }),
-        api.get('/education/v1/course-freezes', { params: freezeParams })
-      ])
-
-      const schedules = schedulesResponse.data.data || []
-      const freezes = freezesResponse.data.data || []
-
-      instance.value = processSchedulesAndFreezes(schedules, freezes)
+      };
+      await studentScheduleStore.fetchStudentSchedule(params);
+      // Обрабатываем данные, передавая пустой массив для заморозок
+      instance.value = processSchedulesAndFreezes(studentScheduleStore.schedule, []);
     }
-  }
-  catch (err) {
-    console.error('Error fetching data:', err)
+  } catch (err) {
+    console.error('Error fetching data:', err);
   }
 }
 
@@ -251,61 +160,41 @@ const handleWeekChange = (range) => {
   dateRange.value = {
     startDate: format(new Date(range.start_date), 'yyyy-MM-dd'),
     endDate: format(new Date(range.end_date), 'yyyy-MM-dd')
-  }
-
-  fetch()
+  };
+  fetch();
 }
 
-// Watch for changes in route queries, authStore token, baseURL, and viewMode
+// Watch for changes that should trigger a re-fetch
 watch(
-    () => [route.query.search, route.query.teacher_id, route.query.child_id, authStore.token, api.defaults.baseURL, viewMode.value],
-    () => {
-      if (dateRange.value.startDate && authStore.token) {
-        fetch()
-      }
-    },
-    { immediate: true } // Run immediately to fetch initial data if conditions are met
-)
+    () => [route.query.search, route.query.teacher_id, route.query.child_id, authStore.token, viewMode.value],
+    fetch, // Упрощено до прямой передачи функции fetch
+    { immediate: true }
+);
 
 onMounted(() => {
   window.addEventListener('message', (event) => {
-    // IMPORTANT: Validate the origin of the message for security!
-    // if (event.origin !== 'https://test-crm.gelios-school.com') { return; }
-
     if (event.data) {
-      if (event.data.type === 'SET_AUTH_TOKENS') {
-        const { accessToken, refreshToken } = event.data;
-        if (accessToken) {
-          authStore.setTokens(accessToken, refreshToken);
-        }
-      } else if (event.data.type === 'SET_API_BASE_URL') {
-        const { baseURL, refreshTokenURL } = event.data;
-        if (baseURL) {
-          setApiBaseURL(baseURL);
-        }
-        if (refreshTokenURL) {
-          setRefreshTokenBaseURL(refreshTokenURL);
-        }
-      } else if (event.data.type === 'SET_VIEW_MODE') {
-        if (event.data.viewMode) {
+      switch (event.data.type) {
+        case 'SET_AUTH_TOKENS':
+          authStore.setTokens(event.data.accessToken, event.data.refreshToken);
+          break;
+        case 'SET_VIEW_MODE':
           viewMode.value = event.data.viewMode;
           localStorage.setItem('viewMode', event.data.viewMode);
-          console.log('View mode set from parent:', viewMode.value);
-        }
+          break;
+          // NOTE: обработчик для 'SET_API_BASE_URL' убран, так как он больше не нужен
       }
     }
   });
-})
+});
 </script>
 
 <template>
   <section class="bg-ggray-bg px-8 pb-8 overflow-y-auto">
-
     <BaseFilterPanel
         :total="instance.total"
         :is-pagination="false"
     />
-
     <article class="mt-6 flex flex-col">
       <WeekCalendar
           :calendar-items="instance.data"
@@ -315,12 +204,9 @@ onMounted(() => {
           @item-click="handleScheduleClick"
       >
         <template #calendarItem="{ item }">
-          <LessonScheduleCalendarCell
-              :item="item"
-          />
+          <LessonScheduleCalendarCell :item="item" />
         </template>
       </WeekCalendar>
     </article>
-
   </section>
 </template>
