@@ -2,7 +2,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import axios from 'axios';
-import { authStore } from './authStore.js';
+import authStore from './authStore.js';
 
 // Создаем отдельный экземпляр axios для API студента
 const studentApi = axios.create({
