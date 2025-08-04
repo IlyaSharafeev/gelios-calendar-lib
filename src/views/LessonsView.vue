@@ -5,6 +5,9 @@ import { useRouter, useRoute } from 'vue-router'
 import api, { setApiBaseURL, setRefreshTokenBaseURL } from '../services/api.js'
 import { format, parse, isWithinInterval } from 'date-fns'
 
+// Импортируем новый стор для расписания учителя
+import { useTeacherScheduleStore } from '../store/teacherScheduleStore.js'
+
 import BaseFilterPanel from '../components/BaseFilterPanel.vue'
 import WeekCalendar from '../components/WeekCalendar.vue'
 import LessonScheduleCalendarCell from '../components/LessonScheduleCalendarCell.vue'
@@ -41,6 +44,9 @@ interface CalendarItem extends Schedule {
 
 const router = useRouter()
 const route = useRoute()
+
+// Инициализируем стор расписания учителя
+const teacherScheduleStore = useTeacherScheduleStore();
 
 const instance = ref({ data: [], total: 0 })
 const viewMode = ref(localStorage.getItem('viewMode') || null);
@@ -173,9 +179,9 @@ const processSchedulesAndFreezes = (
 };
 
 const fetch = async () => {
-  // Проверяем, установлен ли baseURL, прежде чем делать запрос
-  if (!api.defaults.baseURL || !authStore.token) {
-    console.warn("API baseURL or token not set. Waiting for postMessage from parent.");
+  // Проверяем, есть ли токен, прежде чем делать запрос
+  if (!authStore.token) {
+    console.warn("Auth token not set. Waiting for postMessage from parent.");
     return;
   }
 
@@ -184,36 +190,57 @@ const fetch = async () => {
   }
 
   try {
-    // Create the base params object
-    const baseParams = {
-      search: route.query.search || null,
-      child_id: route.query.child_id || null,
-      teacher_id: route.query.teacher_id || null,
+    // --- Логика для режима УЧИТЕЛЯ ---
+    if (viewMode.value === 'teacher') {
+      const params = {
+        start_date: dateRange.value.startDate,
+        end_date: dateRange.value.endDate,
+        // Вы можете добавить сюда другие параметры фильтрации для учителя, если они нужны
+        search: route.query.search || null,
+        child_id: route.query.child_id || null,
+      };
+      await teacherScheduleStore.fetchTeacherSchedule(params);
+
+      // Расписание учителя не содержит данных о заморозках, поэтому передаем пустой массив
+      instance.value = processSchedulesAndFreezes(teacherScheduleStore.schedule, []);
+
+    } else { // --- Логика для режима СТУДЕНТА (или по умолчанию) ---
+      // Проверяем, установлен ли baseURL для студента
+      if (!api.defaults.baseURL) {
+        console.warn("API baseURL for student not set. Waiting for postMessage from parent.");
+        return;
+      }
+
+      // Create the base params object
+      const baseParams = {
+        search: route.query.search || null,
+        child_id: route.query.child_id || null,
+        teacher_id: route.query.teacher_id || null,
+      }
+
+      const scheduleParams = {
+        ...baseParams,
+        status: 'ACTIVE',
+        start_date: dateRange.value.startDate,
+        end_date: dateRange.value.endDate,
+      }
+
+      const freezeParams = {
+        ...baseParams,
+        start_date: dateRange.value.startDate,
+        end_date: dateRange.value.endDate,
+      }
+
+      const [schedulesResponse, freezesResponse] = await Promise.all([
+        api.get('/education/v1/lesson-schedules', { params: scheduleParams }),
+        api.get('/education/v1/course-freezes', { params: freezeParams })
+      ])
+
+      const schedules = schedulesResponse.data.data || []
+      const freezes = freezesResponse.data.data || []
+
+      instance.value = processSchedulesAndFreezes(schedules, freezes)
     }
-
-    const scheduleParams = {
-      ...baseParams,
-      status: 'ACTIVE',
-      start_date: dateRange.value.startDate,
-      end_date: dateRange.value.endDate,
-    }
-
-    const freezeParams = {
-      ...baseParams,
-      // Convert camelCase to snake_case for API params
-      start_date: dateRange.value.startDate,
-      end_date: dateRange.value.endDate,
-    }
-
-    const [schedulesResponse, freezesResponse] = await Promise.all([
-      api.get('/education/v1/lesson-schedules', { params: scheduleParams }),
-      api.get('/education/v1/course-freezes', { params: freezeParams })
-    ])
-
-    const schedules = schedulesResponse.data.data || []
-    const freezes = freezesResponse.data.data || []
-
-    instance.value = processSchedulesAndFreezes(schedules, freezes)
   }
   catch (err) {
     console.error('Error fetching data:', err)
@@ -229,11 +256,11 @@ const handleWeekChange = (range) => {
   fetch()
 }
 
-// Watch for changes in route queries, authStore token, AND api.defaults.baseURL
+// Watch for changes in route queries, authStore token, baseURL, and viewMode
 watch(
-    () => [route.query.search, route.query.teacher_id, route.query.child_id, authStore.token, api.defaults.baseURL],
+    () => [route.query.search, route.query.teacher_id, route.query.child_id, authStore.token, api.defaults.baseURL, viewMode.value],
     () => {
-      if (dateRange.value.startDate && authStore.token && api.defaults.baseURL) {
+      if (dateRange.value.startDate && authStore.token) {
         fetch()
       }
     },
@@ -243,12 +270,7 @@ watch(
 onMounted(() => {
   window.addEventListener('message', (event) => {
     // IMPORTANT: Validate the origin of the message for security!
-    // Замените 'YOUR_PARENT_ORIGIN' на фактический домен/протокол/порт родительского приложения.
-    // Например: if (event.origin !== 'https://test-crm.gelios-school.com') { ... }
-    // if (event.origin !== 'YOUR_PARENT_ORIGIN') {
-    //   console.warn('Received message from untrusted origin:', event.origin);
-    //   return;
-    // }
+    // if (event.origin !== 'https://test-crm.gelios-school.com') { return; }
 
     if (event.data) {
       if (event.data.type === 'SET_AUTH_TOKENS') {
@@ -257,12 +279,12 @@ onMounted(() => {
           authStore.setTokens(accessToken, refreshToken);
         }
       } else if (event.data.type === 'SET_API_BASE_URL') {
-        const { baseURL, refreshTokenURL } = event.data; // Предполагаем, что родитель может передать оба
+        const { baseURL, refreshTokenURL } = event.data;
         if (baseURL) {
-          setApiBaseURL(baseURL); // Устанавливаем основной baseURL
+          setApiBaseURL(baseURL);
         }
-        if (refreshTokenURL) { // Если родитель передал отдельный URL для рефреша
-          setRefreshTokenBaseURL(refreshTokenURL); // Устанавливаем его
+        if (refreshTokenURL) {
+          setRefreshTokenBaseURL(refreshTokenURL);
         }
       } else if (event.data.type === 'SET_VIEW_MODE') {
         if (event.data.viewMode) {
@@ -273,10 +295,6 @@ onMounted(() => {
       }
     }
   });
-
-  // Инициализация fetch будет происходить через watch, когда будут доступны и токен, и baseURL.
-  // Если вы хотите, чтобы компонент мог работать без токена для некоторых запросов,
-  // вам нужно будет скорректировать логику fetch и watch.
 })
 </script>
 
