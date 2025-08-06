@@ -16,6 +16,7 @@ import { enUS, ru, uk } from 'date-fns/locale'
 import { Icon } from '@iconify/vue'
 import IconPlus from '../components/icons/IconPlus.vue'
 import LessonActionsModal from '../components/LessonActionsModal.vue'
+import {useStudentScheduleStore} from "../store/studentScheduleStore";
 
 const props = defineProps({
   calendarItems: {
@@ -45,6 +46,7 @@ const scrollContainer = ref<HTMLElement | null>(null)
 
 const isLessonActionsModalOpen = ref(false)
 const selectedLesson = ref(null)
+const studentScheduleStore = useStudentScheduleStore();
 
 const getLocale = computed(() => {
   switch (locale.value) {
@@ -180,6 +182,7 @@ const handleGoToLesson = (lesson: any) => {
 const handleCancelLesson = (lesson: any) => {
   console.log('Отмена урока:', lesson);
   emitWeekChange();
+  studentScheduleStore.cancelLesson(lesson);
 };
 
 const handleRescheduleSuccess = (lesson: any) => {
