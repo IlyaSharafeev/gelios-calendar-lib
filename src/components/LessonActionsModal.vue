@@ -60,7 +60,7 @@ watch(() => props.isOpen, (newVal) => {
     }
     currentView.value = 'actions';
     isClosing.value = false;
-    fetchTeachers();
+    // fetchTeachers();
   } else {
     isClosing.value = true;
     setTimeout(() => {
@@ -163,31 +163,31 @@ const submitChangeTeacher = async () => {
   }
 };
 
-const fetchTeachers = async () => {
-  try {
-    const config = { params: { paginate: false } };
-    const { data } = await api.get('/users/v1/staff', config);
-    teachers.value = data.map((user) => ({
-      label: `${user.lastName} ${user.firstName}`,
-      value: user.id
-    }));
-    if (editableLesson.value.teacherId && !editableLesson.value.teacherName) {
-      const currentTeacher = teachers.value.find(t => t.value === editableLesson.value.teacherId);
-      if (currentTeacher) {
-        editableLesson.value.teacherName = currentTeacher.label;
-      }
-    }
-  }
-  catch (error) {
-    console.error('Error fetching teachers:', error);
-  }
-};
+// const fetchTeachers = async () => {
+//   try {
+//     const config = { params: { paginate: false } };
+//     const { data } = await api.get('/users/v1/staff', config);
+//     teachers.value = data.map((user) => ({
+//       label: `${user.lastName} ${user.firstName}`,
+//       value: user.id
+//     }));
+//     if (editableLesson.value.teacherId && !editableLesson.value.teacherName) {
+//       const currentTeacher = teachers.value.find(t => t.value === editableLesson.value.teacherId);
+//       if (currentTeacher) {
+//         editableLesson.value.teacherName = currentTeacher.label;
+//       }
+//     }
+//   }
+//   catch (error) {
+//     console.error('Error fetching teachers:', error);
+//   }
+// };
 
-onMounted(() => {
-  if (props.isOpen) {
-    fetchTeachers();
-  }
-});
+// onMounted(() => {
+//   if (props.isOpen) {
+//     fetchTeachers();
+//   }
+// });
 
 const lessonTimeFormatted = computed(() => {
   if (editableLesson.value.lessonDate instanceof Date && !isNaN(editableLesson.value.lessonDate)) {
