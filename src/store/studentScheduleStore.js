@@ -3,6 +3,7 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import axios from 'axios';
 import authStore from './authStore.js';
+import {format} from "date-fns";
 
 // Создаем отдельный экземпляр axios для API студента
 const studentApi = axios.create({
@@ -39,10 +40,14 @@ export const useStudentScheduleStore = defineStore('studentSchedule', () => {
         }
     }
 
-    async function cancelLesson(payload) {
-        console.log(payload);
+    async function cancelLesson(payloadInput) {
+        console.log(payloadInput);
         isLoading.value = true;
         error.value = null;
+        const payload = {
+            lessonScheduleId: payloadInput.id,
+            date: format(new Date(payloadInput.lessonDate), 'yyyy-MM-dd')
+        };
         try {
             await studentApi.post('/shared/lesson-cancel', payload);
         } catch (err) {
