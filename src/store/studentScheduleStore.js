@@ -41,7 +41,6 @@ export const useStudentScheduleStore = defineStore('studentSchedule', () => {
     }
 
     async function cancelLesson(payloadInput) {
-        console.log(payloadInput);
         isLoading.value = true;
         error.value = null;
         const payload = {
