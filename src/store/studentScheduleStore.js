@@ -39,7 +39,6 @@ export const useStudentScheduleStore = defineStore('studentSchedule', () => {
         }
     }
 
-    // НОВАЯ ФУНКЦИЯ ДЛЯ ОТМЕНЫ УРОКА
     async function cancelLesson(payload) {
         console.log(payload);
         isLoading.value = true;
