@@ -45,12 +45,10 @@ export const useStudentScheduleStore = defineStore('studentSchedule', () => {
         isLoading.value = true;
         error.value = null;
         try {
-            // Используем метод POST для отправки данных на эндпоинт отмены
             await studentApi.post('/shared/lesson-cancel', payload);
         } catch (err) {
             console.error('Error canceling lesson:', err);
             error.value = err;
-            // Важно пробросить ошибку дальше, чтобы компонент мог ее обработать
             throw err;
         } finally {
             isLoading.value = false;
