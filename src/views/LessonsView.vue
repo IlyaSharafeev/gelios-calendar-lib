@@ -164,6 +164,36 @@ const handleWeekChange = (range) => {
   fetch();
 }
 
+// НОВЫЙ ОБРАБОТЧИК ДЛЯ ОТМЕНЫ УРОКА
+const handleLessonCancel = async (lesson) => {
+  if (!lesson || !lesson.id || !lesson.lessonDate) {
+    console.error('Недостаточно данных для отмены урока:', lesson);
+    return;
+  }
+
+  try {
+    // 1. Формируем payload для запроса
+    const payload = {
+      lessonScheduleId: lesson.id,
+      date: format(new Date(lesson.lessonDate), 'yyyy-MM-dd')
+    };
+
+    console.log('Отправка запроса на отмену урока с данными:', payload);
+
+    // 2. Вызываем метод из хранилища
+    await studentScheduleStore.cancelLesson(payload);
+
+    console.log('Урок успешно отменен.');
+
+    // 3. Обновляем расписание, чтобы отмененный урок исчез
+    fetch();
+
+  } catch (err) {
+    console.error('Ошибка при отмене урока в компоненте:', err);
+    // Здесь можно добавить логику для отображения ошибки пользователю
+  }
+};
+
 // Watch for changes that should trigger a re-fetch
 watch(
     () => [route.query.search, route.query.teacher_id, route.query.child_id, authStore.token, viewMode.value],
@@ -202,6 +232,7 @@ onMounted(() => {
           :view-mode="viewMode"
           @week-change="handleWeekChange"
           @item-click="handleScheduleClick"
+          @cancel-lesson="handleLessonCancel"
       >
         <template #calendarItem="{ item }">
           <LessonScheduleCalendarCell :item="item" />
