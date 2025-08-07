@@ -14,9 +14,7 @@ import {
 } from 'date-fns'
 import { enUS, ru, uk } from 'date-fns/locale'
 import { Icon } from '@iconify/vue'
-import IconPlus from '../components/icons/IconPlus.vue'
 import LessonActionsModal from '../components/LessonActionsModal.vue'
-import {useStudentScheduleStore} from "../store/studentScheduleStore";
 
 const props = defineProps({
   calendarItems: {
@@ -37,7 +35,8 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['weekChange', 'itemClick'])
+// ✅ ИЗМЕНЕНИЕ: Добавлены новые события
+const emit = defineEmits(['weekChange', 'itemClick', 'cancel-lesson', 'reschedule-lesson'])
 
 const { t, locale } = useI18n()
 const currentDate = ref(new Date())
@@ -46,7 +45,6 @@ const scrollContainer = ref<HTMLElement | null>(null)
 
 const isLessonActionsModalOpen = ref(false)
 const selectedLesson = ref(null)
-const studentScheduleStore = useStudentScheduleStore();
 
 const getLocale = computed(() => {
   switch (locale.value) {
@@ -171,25 +169,14 @@ const handleLessonActionsModalClose = () => {
   selectedLesson.value = null;
 };
 
-// ИЗМЕНЕНО: Эта функция больше не нужна, так как модальное окно само обрабатывает переход
-/*
-const handleGoToLesson = (lesson: any) => {
-  console.log('Навигация к уроку:', lesson);
-  emit('itemClick', lesson);
-};
-*/
-
+// ✅ ИЗМЕНЕНИЕ: Теперь просто генерируем событие
 const handleCancelLesson = (lesson: any) => {
-  console.log('Отмена урока:', lesson);
-  emitWeekChange();
-  studentScheduleStore.cancelLesson(lesson);
+  emit('cancel-lesson', lesson);
 };
 
-
-const handleRescheduleSuccess = ({ originalLesson, newDate }) => {
-  console.log('Урок успішно перенесено. Оригінал:', originalLesson, 'Нова дата:', newDate);
-  studentScheduleStore.rescheduleLesson(originalLesson, newDate);
-  emitWeekChange();
+// ✅ ИЗМЕНЕНИЕ: Теперь просто генерируем событие
+const handleRescheduleSuccess = (payload: { originalLesson: any; newDate: any }) => {
+  emit('reschedule-lesson', payload);
 };
 
 onMounted(() => {
@@ -279,49 +266,5 @@ onMounted(() => {
       @close="handleLessonActionsModalClose"
       @cancel-lesson="handleCancelLesson"
       @reschedule-lesson="handleRescheduleSuccess"
-      @change-teacher="handleChangeTeacher"
   />
 </template>
-
-<style lang="scss">
-.add-lesson-wrapper {
-  display: flex;
-  justify-content: center;
-  padding-top: 12px;
-
-  .add-lesson {
-    border: 1px solid #0066FF;
-    border-radius: 55px;
-    padding: 6px 34px;
-    color: #0066FF;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-
-    &:hover {
-      background-color: #0066FF;
-      color: #fff;
-      border-color: #0066FF;
-
-      .icon-plus {
-        filter: brightness(0) invert(1);
-      }
-    }
-  }
-}
-
-.icon-plus {
-  background-image: url('../assets/icons/plus.svg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  width: 16px;
-  height: 16px;
-  padding-bottom: 5px;
-  margin-bottom: 4px;
-  transition: filter 0.3s ease;
-}
-</style>

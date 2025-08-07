@@ -110,29 +110,40 @@ const handleWeekChange = (range: { start_date: string; end_date: string }) => {
   };
 }
 
+// ✅ ИЗМЕНЕНИЕ: Обработчик отмены урока
 const handleLessonCancel = async (lesson: CalendarItem) => {
-  if (!lesson || !lesson.id || !lesson.lessonDate) {
+  if (!lesson || !lesson.id) {
     console.error('Недостаточно данных для отмены урока:', lesson);
     return;
   }
-
   try {
-    const payload = {
-      id: lesson.id,
-      lessonDate: lesson.lessonDate
-    };
-
-    console.log('Отправка запроса на отмену урока с данными:', payload);
-
-    await studentScheduleStore.cancelLesson(payload);
-
-    console.log('Урок успешно отменен.');
+    // 1. Дожидаемся выполнения запроса на отмену
+    await studentScheduleStore.cancelLesson(lesson);
+    console.log('Урок успешно отменен. Обновляем данные...');
+    // 2. Только после этого запрашиваем свежие данные
     fetch();
-
   } catch (err) {
     console.error('Ошибка при отмене урока в компоненте:', err);
   }
 };
+
+// ✅ ИЗМЕНЕНИЕ: Обработчик переноса урока
+const handleLessonReschedule = async ({ originalLesson, newDate }: { originalLesson: any; newDate: any }) => {
+  if (!originalLesson || !newDate) {
+    console.error('Недостаточно данных для переноса урока');
+    return;
+  }
+  try {
+    // 1. Дожидаемся выполнения запроса на перенос
+    await studentScheduleStore.rescheduleLesson(originalLesson, newDate);
+    console.log('Урок успешно перенесен. Обновляем данные...');
+    // 2. Только после этого запрашиваем свежие данные
+    fetch();
+  } catch (err) {
+    console.error('Ошибка при переносе урока в компоненте:', err);
+  }
+};
+
 
 watch(
     () => [route.query.search, route.query.teacher_id, route.query.child_id, authStore.token, viewMode.value, dateRange.value],
@@ -173,6 +184,8 @@ onMounted(() => {
           :view-mode="viewMode"
           @week-change="handleWeekChange"
           @item-click="handleScheduleClick"
+          @cancel-lesson="handleLessonCancel"
+          @reschedule-lesson="handleLessonReschedule"
       >
         <template #calendarItem="{ item }">
           <LessonScheduleCalendarCell :item="item" />
