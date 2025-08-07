@@ -22,13 +22,10 @@ const props = defineProps({
   }
 });
 
-// ИЗМЕНЕНО: Эмит 'goToLesson' больше не нужен, так как навигация обрабатывается ссылкой
-const emit = defineEmits(['close', 'cancelLesson', 'rescheduleSuccess', 'changeTeacherSuccess']);
+const emit = defineEmits(['close', 'cancelLesson', 'rescheduleLesson', 'changeTeacherSuccess']);
 
 const currentView = ref('actions');
 const isClosing = ref(false);
-const newDateShedule = ref(null);
-const newStartTime = ref(null);
 
 const editableLesson = ref({
   id: null,
@@ -85,14 +82,6 @@ const close = () => {
   emit('close');
 };
 
-// ИЗМЕНЕНО: Эта функция больше не нужна, так как заменена на тег <a>
-/*
-const goToLesson = () => {
-  emit('goToLesson', props.lesson);
-  close();
-};
-*/
-
 const cancelLesson = () => {
   emit('cancelLesson', props.lesson);
   close();
@@ -110,22 +99,19 @@ const switchToActionsView = () => {
   currentView.value = 'actions';
 };
 
-const handleDateChange = (date, typeOfDate) => {
-  if(typeOfDate === 'newDate') {
-    newDateShedule.value = date;
-  }
+const handleDateChange = (newDatePart) => {
+  if (!newDatePart) return;
+  const currentDate = editableLesson.value.lessonDate ? new Date(editableLesson.value.lessonDate) : new Date();
+  currentDate.setFullYear(newDatePart.getFullYear(), newDatePart.getMonth(), newDatePart.getDate());
+  editableLesson.value.lessonDate = currentDate;
+};
 
-  if(typeOfDate === 'newStartTime') {
-    newStartTime.value = date;
-  }
-
-  if (date instanceof Date) {
-    editableLesson.value.lessonDate = date;
-  } else if (date) {
-    editableLesson.value.lessonDate = new Date(date);
-  } else {
-    editableLesson.value.lessonDate = null;
-  }
+const handleTimeChange = (newTimePart) => {
+  if (!newTimePart) return;
+  const currentDate = editableLesson.value.lessonDate ? new Date(editableLesson.value.lessonDate) : new Date();
+  currentDate.setHours(newTimePart.getHours());
+  currentDate.setMinutes(newTimePart.getMinutes());
+  editableLesson.value.lessonDate = currentDate;
 };
 
 const handleTrainerSelected = (trainerName) => {
@@ -143,12 +129,12 @@ const submitReschedule = async () => {
     console.error(t('errors.reschedule-missing-fields'));
     return;
   }
-  const dates = {
-    newDateShedule,
-    newStartTime,
+  const updatedLesson = {
+    ...props.lesson,
+    lessonDate: editableLesson.value.lessonDate.toISOString()
   };
-  console.log(editableLesson.value);
-  emit('rescheduleLesson', props.lesson, dates);
+  emit('rescheduleLesson', updatedLesson);
+  close();
 };
 
 const submitChangeTeacher = async () => {
@@ -252,7 +238,7 @@ const lessonTimeFormatted = computed(() => {
                 :locale="locale"
                 hide-input-icon
                 input-class-name="custom-datepicker-input"
-                @update:model-value="handleDateChange('newStartTime')"
+                @update:model-value="handleTimeChange"
             />
           </div>
           <div class="form-field-group">
@@ -267,7 +253,7 @@ const lessonTimeFormatted = computed(() => {
                 :locale="locale"
                 hide-input-icon
                 input-class-name="custom-datepicker-input"
-                @update:model-value="handleDateChange('newDate')"
+                @update:model-value="handleDateChange"
             />
           </div>
         </div>
@@ -354,11 +340,11 @@ const lessonTimeFormatted = computed(() => {
   background-color: transparent !important;
   justify-content: center;
   border-radius: 12px;
+}
 
-  &:hover {
-    background-color: #FF3546;
-    color: white;
-  }
+.button-close:hover {
+  background-color: #FF3546 !important;
+  color: white !important;
 }
 
 .button-next {
@@ -367,11 +353,11 @@ const lessonTimeFormatted = computed(() => {
   background-color: transparent !important;
   justify-content: center;
   border-radius: 12px;
+}
 
-  &:hover {
-    background-color: #0066FF;
-    color: white;
-  }
+.button-next:hover {
+  background-color: #0066FF !important;
+  color: white !important;
 }
 
 .primary-button {
@@ -386,6 +372,9 @@ const lessonTimeFormatted = computed(() => {
 .primary-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  border-color: #a9a9a9;
+  background-color: transparent !important;
+  color: #a9a9a9 !important;
 }
 
 .danger-text-button {
@@ -424,33 +413,31 @@ const lessonTimeFormatted = computed(() => {
 
 /* Form container for reschedule and change teacher views */
 .form-container {
-  /* Removed padding here as TrainerSelection now has its own styling */
-  /* This ensures TrainerSelection's internal padding acts as the form's padding */
   padding: 0;
 }
 
 .form-row {
   display: flex;
-  align-items: flex-start; /* Align items at the top */
-  margin-bottom: 24px; /* mb-6 from Tailwind */
+  align-items: flex-start;
+  margin-bottom: 24px;
 }
 
 .form-field-group {
   display: flex;
   flex-direction: column;
-  flex: 1; /* flex-1 from Tailwind */
-  margin-bottom: 16px; /* mb-4 from Tailwind */
+  flex: 1;
+  margin-bottom: 16px;
 }
 
 .form-field-group.mr-4 {
-  margin-right: 16px; /* mr-4 from Tailwind */
+  margin-right: 16px;
 }
 
 .form-label {
-  font-size: 14px; /* text-sm from Tailwind */
-  font-weight: 500; /* font-medium from Tailwind */
-  color: #6B7280; /* gray-500 from Tailwind */
-  margin-bottom: 15px; /* mb-1 from Tailwind */
+  font-size: 14px;
+  font-weight: 500;
+  color: #6B7280;
+  margin-bottom: 15px;
   display: block;
 }
 
@@ -472,79 +459,17 @@ const lessonTimeFormatted = computed(() => {
   box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.2);
 }
 
-/* Static teacher list in reschedule view */
-.static-teacher-list {
-  font-size: 14px; /* text-sm from Tailwind */
-  color: #374151; /* gray-700 from Tailwind */
-  line-height: 1.5;
-}
-
-.static-teacher-list p {
-  margin-bottom: 4px;
-}
-
-/* Button group at the bottom of forms */
 .button-group {
   display: flex;
-  gap: 16px; /* gap-4 from Tailwind */
+  gap: 16px;
 }
 
 .flex-grow {
   flex-grow: 1;
 }
 
-/* BaseDropdown custom styling */
-.base-dropdown-custom :deep(.dropdown-input) {
-  background-color: #f7f7f7;
-  border-radius: 10px;
-  border: 1px solid #e0e0e0;
-  padding: 10px 12px;
-  font-size: 16px;
-  color: #333;
-}
-
-.base-dropdown-custom :deep(.dropdown-input:focus) {
-  outline: none;
-  border-color: #0066FF;
-  box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.2);
-}
-
-/* New styles for the Change Teacher view layout */
-.grid-container {
-  display: flex; /* Using flex for simplicity for 2 columns, can be grid */
-  gap: 16px; /* Adjust gap between TrainerSelection and Datepicker */
-  margin-bottom: 24px; /* Space before buttons */
-  align-items: baseline;
-  padding: 0 24px; /* Padding to match modal-content's original horizontal padding */
-}
-
-.trainer-selection-col {
-  flex: 9; /* Occupy 9 parts of the 12-part layout */
-  /* TrainerSelection has its own internal padding */
-}
-
-.time-datepicker-col {
-  flex: 3; /* Occupy 3 parts of the 12-part layout */
-  /* No additional padding, form-field-group handles it */
-}
-
-/* Removed modal-header-top styles as it's now part of TrainerSelection */
-/*
-.modal-header-top { ... }
-.modal-title { ... }
-.time-display-wrapper { ... }
-.time-label { ... }
-.time-value { ... }
-*/
-
 .change-teacher-form {
-  /* This form container now encompasses the grid and the buttons. */
-  /* TrainerSelection will handle its own internal padding. */
-  padding: 0; /* Remove top/bottom padding to let TrainerSelection and buttons handle it */
+  padding: 0;
 }
 
-.change-teacher-buttons {
-  margin-top: 0; /* No extra margin here, grid-container has margin-bottom */
-  padding: 0 24px 0; /* Padding for the buttons section, from the original modal-content padding */
-}
 </style>
