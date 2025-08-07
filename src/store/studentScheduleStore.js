@@ -58,22 +58,27 @@ export const useStudentScheduleStore = defineStore('studentSchedule', () => {
         }
     }
 
-    async function rescheduleLesson(payloadInput, date) {
+    async function rescheduleLesson(originalLesson, newDate) {
         isLoading.value = true;
         error.value = null;
-        console.log(payloadInput, date);
+
+        const newDateObj = new Date(newDate);
+
         const payload = {
-            lessonScheduleId: payloadInput.id,
-            date: format(new Date(payloadInput.lessonDate), 'yyyy-MM-dd'),
-            newDate: "2025-08-10",
-            newStartTime: "15:30:00"
+            lessonScheduleId: originalLesson.id,
+            date: format(new Date(originalLesson.lessonDate), 'yyyy-MM-dd'),
+            newDate: format(newDateObj, 'yyyy-MM-dd'),
+            newStartTime: format(newDateObj, 'HH:mm:ss')
         };
+
+        console.log('Sending payload to reschedule:', payload); // Додамо лог для перевірки
+
         try {
             await studentApi.post('/shared/lesson-reschedule', payload);
         } catch (err) {
-            console.error('Error canceling lesson:', err);
+            console.error('Error rescheduling lesson:', err);
             error.value = err;
-            throw err;
+            throw err; // Важливо прокинути помилку далі, щоб UI міг на неї зреагувати
         } finally {
             isLoading.value = false;
         }

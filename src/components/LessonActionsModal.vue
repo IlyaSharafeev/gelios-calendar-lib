@@ -125,15 +125,15 @@ const handleTrainerSelected = (trainerName) => {
 };
 
 const submitReschedule = async () => {
-  if (!editableLesson.value.lessonDate || !editableLesson.value.id) {
+  if (!editableLesson.value.lessonDate || !props.lesson) {
     console.error(t('errors.reschedule-missing-fields'));
     return;
   }
-  const updatedLesson = {
-    ...props.lesson,
-    lessonDate: editableLesson.value.lessonDate.toISOString()
-  };
-  emit('rescheduleLesson', updatedLesson);
+  // Відправляємо подію з двома ключами: оригінальний урок і нова дата
+  emit('rescheduleLesson', {
+    originalLesson: props.lesson,
+    newDate: editableLesson.value.lessonDate
+  });
   close();
 };
 
