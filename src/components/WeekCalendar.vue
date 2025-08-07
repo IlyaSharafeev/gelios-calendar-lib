@@ -185,10 +185,10 @@ const handleCancelLesson = (lesson: any) => {
   studentScheduleStore.cancelLesson(lesson);
 };
 
-const handleRescheduleSuccess = (lesson: any) => {
-  console.log('Урок успешно перенесен:', lesson);
+const handleRescheduleSuccess = (lesson: any, date) => {
+  console.log('Урок успешно перенесен:', lesson, date);
   emitWeekChange();
-  studentScheduleStore.rescheduleLesson(lesson);
+  studentScheduleStore.rescheduleLesson(lesson, date);
 };
 
 const handleChangeTeacher = (lesson: any) => {

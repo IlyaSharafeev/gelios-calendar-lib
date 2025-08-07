@@ -27,6 +27,8 @@ const emit = defineEmits(['close', 'cancelLesson', 'rescheduleSuccess', 'changeT
 
 const currentView = ref('actions');
 const isClosing = ref(false);
+const newDateShedule = ref(null);
+const newStartTime = ref(null);
 
 const editableLesson = ref({
   id: null,
@@ -108,7 +110,15 @@ const switchToActionsView = () => {
   currentView.value = 'actions';
 };
 
-const handleDateChange = (date) => {
+const handleDateChange = (date, typeOfDate) => {
+  if(typeOfDate === 'newDate') {
+    newDateShedule.value = date;
+  }
+
+  if(typeOfDate === 'newStartTime') {
+    newStartTime.value = date;
+  }
+
   if (date instanceof Date) {
     editableLesson.value.lessonDate = date;
   } else if (date) {
@@ -133,8 +143,12 @@ const submitReschedule = async () => {
     console.error(t('errors.reschedule-missing-fields'));
     return;
   }
+  const dates = {
+    newDateShedule,
+    newStartTime,
+  };
   console.log(editableLesson.value);
-  emit('rescheduleLesson', props.lesson);
+  emit('rescheduleLesson', props.lesson, dates);
 };
 
 const submitChangeTeacher = async () => {
@@ -238,7 +252,7 @@ const lessonTimeFormatted = computed(() => {
                 :locale="locale"
                 hide-input-icon
                 input-class-name="custom-datepicker-input"
-                @update:model-value="handleDateChange"
+                @update:model-value="handleDateChange('newStartTime')"
             />
           </div>
           <div class="form-field-group">
@@ -253,7 +267,7 @@ const lessonTimeFormatted = computed(() => {
                 :locale="locale"
                 hide-input-icon
                 input-class-name="custom-datepicker-input"
-                @update:model-value="handleDateChange"
+                @update:model-value="handleDateChange('newDate')"
             />
           </div>
         </div>
