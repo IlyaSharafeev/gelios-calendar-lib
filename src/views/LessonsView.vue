@@ -12,19 +12,19 @@ import WeekCalendar from '../components/WeekCalendar.vue'
 import LessonScheduleCalendarCell from '../components/LessonScheduleCalendarCell.vue'
 import authStore from '../store/authStore.js';
 
-// Type definitions for better clarity (ОБНОВЛЕНО)
+// Type definitions
 interface Schedule {
   id: number;
   childCourse: number;
-  date: string; // '2025-08-04'
-  startTime: string; // '13:31:00'
-  endTime: string; // '14:31:00'
+  date: string;
+  startTime: string;
+  endTime: string;
   child: { id: string; firstName: string; lastName: string; };
   teacher: { id: string; firstName: string; lastName: string; };
   direction: { id: number; en: string; uk: string; ru: string };
   link: string | null;
-  course_status: 'FROZEN' | 'ACTIVE' | string; // Добавляем возможные статусы курса
-  status: 'SCHEDULED' | 'RESCHEDULED' | 'CANCELLED' | string; // Добавляем статусы урока
+  course_status: 'FROZEN' | 'ACTIVE' | string;
+  status: 'SCHEDULED' | 'RESCHEDULED' | 'CANCELLED' | string;
 }
 
 interface CalendarItem extends Omit<Schedule, 'date' | 'startTime' | 'endTime'> {
@@ -39,7 +39,6 @@ interface CalendarItem extends Omit<Schedule, 'date' | 'startTime' | 'endTime'> 
 const router = useRouter()
 const route = useRoute()
 
-// Инициализируем оба стора
 const teacherScheduleStore = useTeacherScheduleStore();
 const studentScheduleStore = useStudentScheduleStore();
 
@@ -48,13 +47,12 @@ const viewMode = ref(localStorage.getItem('viewMode') || null);
 
 const dateRange = ref({startDate: null, endDate: null})
 
-// Handle schedule click for navigation
 const handleScheduleClick = (schedule: CalendarItem) => {
   console.log('Переход к уроку (навигация):', schedule)
 }
 
 /**
- * Converts schedules data into calendar items (ОБНОВЛЕНО)
+ * Converts schedules data into calendar items
  * @param schedules - The array of lesson objects from the API.
  */
 const processSchedules = (schedules: Schedule[]) => {
@@ -62,24 +60,19 @@ const processSchedules = (schedules: Schedule[]) => {
     return { data: [], total: 0 };
   }
 
-  const calendarItems: CalendarItem[] = schedules
-      // Фильтруем отмененные уроки, чтобы не отображать их
-      .filter(schedule => schedule.status !== 'CANCELLED')
-      .map(schedule => {
-        // Создаем объект Date из строки даты и времени
-        const lessonDate = parse(`${schedule.date} ${schedule.startTime}`, 'yyyy-MM-dd HH:mm:ss', new Date());
+  const calendarItems: CalendarItem[] = schedules.map(schedule => {
+    const lessonDate = parse(`${schedule.date} ${schedule.startTime}`, 'yyyy-MM-dd HH:mm:ss', new Date());
 
-        return {
-          ...schedule,
-          // isFrozen теперь зависит от статуса курса
-          isFrozen: schedule.course_status === 'FROZEN',
-          lessonDate: lessonDate,
-          time: {
-            start: format(lessonDate, 'HH:mm'),
-            end: format(parse(schedule.endTime, 'HH:mm:ss', new Date()), 'HH:mm')
-          }
-        };
-      });
+    return {
+      ...schedule,
+      isFrozen: schedule.course_status === 'FROZEN',
+      lessonDate: lessonDate,
+      time: {
+        start: format(lessonDate, 'HH:mm'),
+        end: format(parse(schedule.endTime, 'HH:mm:ss', new Date()), 'HH:mm')
+      }
+    };
+  });
 
   return { data: calendarItems, total: calendarItems.length };
 };
@@ -94,7 +87,6 @@ const fetch = async () => {
       start_date: dateRange.value.startDate,
       end_date: dateRange.value.endDate,
       search: route.query.search || null,
-      // Эти параметры будут использоваться только если они есть в URL
       child_id: route.query.child_id || null,
       teacher_id: route.query.teacher_id || null,
     };
@@ -102,7 +94,7 @@ const fetch = async () => {
     if (viewMode.value === 'teacher') {
       await teacherScheduleStore.fetchTeacherSchedule(params);
       instance.value = processSchedules(teacherScheduleStore.schedule);
-    } else { // Логика для режима СТУДЕНTA
+    } else {
       await studentScheduleStore.fetchStudentSchedule(params);
       instance.value = processSchedules(studentScheduleStore.schedule);
     }
@@ -116,7 +108,6 @@ const handleWeekChange = (range: { start_date: string; end_date: string }) => {
     startDate: format(new Date(range.start_date), 'yyyy-MM-dd'),
     endDate: format(new Date(range.end_date), 'yyyy-MM-dd')
   };
-  // Не нужно вызывать fetch здесь, так как watch отследит изменение dateRange
 }
 
 const handleLessonCancel = async (lesson: CalendarItem) => {
@@ -126,7 +117,6 @@ const handleLessonCancel = async (lesson: CalendarItem) => {
   }
 
   try {
-    // В payload для отмены нам нужен ID урока и его оригинальная дата
     const payload = {
       id: lesson.id,
       lessonDate: lesson.lessonDate
@@ -134,11 +124,9 @@ const handleLessonCancel = async (lesson: CalendarItem) => {
 
     console.log('Отправка запроса на отмену урока с данными:', payload);
 
-    // Вызываем метод из хранилища
     await studentScheduleStore.cancelLesson(payload);
 
     console.log('Урок успешно отменен.');
-    // Обновляем данные после отмены
     fetch();
 
   } catch (err) {

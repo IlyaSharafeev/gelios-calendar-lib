@@ -12,33 +12,58 @@ const props = defineProps({
 })
 
 const time = computed(() => `${props.item.time.start} - ${props.item.time.end}`)
-
 const direction = computed(() => props.item.direction[locale.value])
-
 const child = computed(() => `${props.item.child.lastName} ${props.item.child.firstName.charAt(0)}.`)
-
 const teacher = computed(() => `${props.item.teacher.lastName} ${props.item.teacher.firstName.charAt(0)}.`)
-
 const isFrozen = computed(() => props.item.isFrozen)
 
-// The 'emit' definition is no longer needed for the click event, but we can keep it for future use.
+// Добавлено computed-свойство для классов ячейки
+const cellClass = computed(() => {
+  // Отменённые уроки - красный фон, курсор неактивен
+  if (props.item.status === 'CANCELLED') {
+    return 'bg-gred-5 cursor-not-allowed';
+  }
+  // Перенесённые уроки - голубой фон
+  if (props.item.status === 'RESCHEDULED') {
+    return 'bg-gblue-5';
+  }
+  // Замороженные уроки (если они не отменены)
+  if (isFrozen.value) {
+    return 'bg-gred-5 hover:cursor-not-allowed';
+  }
+  // Стиль по умолчанию с ховером
+  return 'hover:bg-gblue-5';
+});
+
+// Добавлено computed-свойство для классов индикатора времени
+const badgeClass = computed(() => {
+  // Для отмененных уроков
+  if (props.item.status === 'CANCELLED') {
+    return 'text-gred-100 bg-gred-10';
+  }
+  // Для перенесенных уроков (чтобы текст был читаемым на голубом фоне)
+  if (props.item.status === 'RESCHEDULED') {
+    return 'text-gblue-100 bg-white';
+  }
+  // Для замороженных уроков
+  if (isFrozen.value) {
+    return 'text-gred-100 bg-gred-10';
+  }
+  // Стиль по умолчанию
+  return 'text-gblue-100 bg-gblue-5';
+});
+
 const emit = defineEmits(['itemClick'])
 </script>
 
 <template>
   <div
       class="flex items-center justify-between px-3 py-2.5 cursor-pointer transition-colors rounded-xl"
-      :class="{
-      'bg-gred-5 hover:cursor-not-allowed': isFrozen,
-      'hover:bg-gblue-5': !isFrozen
-    }"
+      :class="cellClass"
   >
     <div
         class="flex items-center text-xs font-medium rounded-full px-2 py-1"
-        :class="{
-        'text-gred-100 bg-gred-10': isFrozen,
-        'text-gblue-100 bg-gblue-5': !isFrozen
-      }"
+        :class="badgeClass"
     >
       {{ time }}
     </div>
