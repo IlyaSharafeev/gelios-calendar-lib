@@ -58,6 +58,26 @@ export const useStudentScheduleStore = defineStore('studentSchedule', () => {
         }
     }
 
+    async function rescheduleLesson(payloadInput) {
+        isLoading.value = true;
+        error.value = null;
+        const payload = {
+            lessonScheduleId: payloadInput.id,
+            date: format(new Date(payloadInput.lessonDate), 'yyyy-MM-dd'),
+            newDate: "2025-08-10",
+            newStartTime: "15:30:00"
+        };
+        try {
+            await studentApi.post('/shared/lesson-reschedule', payload);
+        } catch (err) {
+            console.error('Error canceling lesson:', err);
+            error.value = err;
+            throw err;
+        } finally {
+            isLoading.value = false;
+        }
+    }
+
     // Не забудьте вернуть новую функцию
     return { schedule, isLoading, error, fetchStudentSchedule, cancelLesson };
 });

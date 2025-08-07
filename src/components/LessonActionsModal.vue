@@ -220,7 +220,7 @@ const lessonTimeFormatted = computed(() => {
           <Icon icon="material-symbols:close-rounded" width="20" height="20" />
           {{ t('lesson.cancel-lesson') }}
         </button>
-        <button v-if="!viewMode" class="action-button primary-text-button" @click="switchToRescheduleView">
+        <button v-if="viewMode === 'student'" class="action-button primary-text-button" @click="switchToRescheduleView">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.5 7.50033H6.25C4.17893 7.50033 2.5 9.17926 2.5 11.2503C2.5 13.3214 4.17893 15.0003 6.25 15.0003H10M17.5 7.50033L14.1667 4.16699M17.5 7.50033L14.1667 10.8337" stroke="#0066FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           {{ t('lesson.reschedule-lesson') }}
         </button>
