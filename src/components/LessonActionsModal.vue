@@ -163,7 +163,7 @@ const submitChangeTeacher = async () => {
 
       <div v-if="isRescheduleView" class="form-container reschedule-form">
         <div class="form-field-group">
-          <label class="form-label">{{ t('common.date-and-time') }}</label>
+          <label class="form-label">{{ t('actions.reschedule') }}</label>
           <Datepicker
               v-model="editableLesson.lessonDate"
               :placeholder="t('actions.select')"
