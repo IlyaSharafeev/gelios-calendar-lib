@@ -61,6 +61,7 @@ export const useStudentScheduleStore = defineStore('studentSchedule', () => {
     async function rescheduleLesson(payloadInput) {
         isLoading.value = true;
         error.value = null;
+        console.log(payloadInput);
         const payload = {
             lessonScheduleId: payloadInput.id,
             date: format(new Date(payloadInput.lessonDate), 'yyyy-MM-dd'),
@@ -79,5 +80,5 @@ export const useStudentScheduleStore = defineStore('studentSchedule', () => {
     }
 
     // Не забудьте вернуть новую функцию
-    return { schedule, isLoading, error, fetchStudentSchedule, cancelLesson };
+    return { schedule, isLoading, error, fetchStudentSchedule, cancelLesson, rescheduleLesson };
 });

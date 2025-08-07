@@ -188,6 +188,7 @@ const handleCancelLesson = (lesson: any) => {
 const handleRescheduleSuccess = (lesson: any) => {
   console.log('Урок успешно перенесен:', lesson);
   emitWeekChange();
+  studentScheduleStore.rescheduleLesson(lesson);
 };
 
 const handleChangeTeacher = (lesson: any) => {
@@ -281,7 +282,7 @@ onMounted(() => {
       :view-mode="props.viewMode"
       @close="handleLessonActionsModalClose"
       @cancel-lesson="handleCancelLesson"
-      @reschedule-success="handleRescheduleSuccess"
+      @reschedule-lesson="handleRescheduleSuccess"
       @change-teacher="handleChangeTeacher"
   />
 </template>

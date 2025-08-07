@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n';
 import Datepicker from '@vuepic/vue-datepicker';
 import api from '../services/api.js';
 import TrainerSelection from '../components/TrainerSelection.vue'
+import {useStudentScheduleStore} from "@/store/studentScheduleStore";
 
 const { t, locale } = useI18n();
 
@@ -134,16 +135,8 @@ const submitReschedule = async () => {
     console.error(t('errors.reschedule-missing-fields'));
     return;
   }
-  try {
-    await api.put(`/sales/v1/demo-lessons/${editableLesson.value.id}`, {
-      lessonDate: editableLesson.value.lessonDate.toISOString(),
-    });
-    emit('rescheduleSuccess', editableLesson.value);
-    close();
-  }
-  catch (error) {
-    console.error(t('errors.reschedule-error'), error);
-  }
+  console.log(editableLesson.value);
+  emit('rescheduleLesson', props.lesson);
 };
 
 const submitChangeTeacher = async () => {
