@@ -231,6 +231,54 @@ const lessonTimeFormatted = computed(() => {
       </div>
 
       <div v-if="isRescheduleView" class="form-container reschedule-form">
+        <div class="form-row">
+          <div class="form-field-group mr-4">
+            <label class="form-label">{{ t('common.time') }}</label>
+            <Datepicker
+                v-model="editableLesson.lessonDate"
+                :placeholder="t('actions.select')"
+                :enable-time-picker="true"
+                :is-24="true"
+                :format="'HH:mm'"
+                :preview-format="'HH:mm'"
+                :auto-apply="true"
+                :time-picker="true"
+                :date-picker="false"
+                :locale="locale"
+                hide-input-icon
+                input-class-name="custom-datepicker-input"
+                @update:model-value="handleDateChange"
+            />
+          </div>
+          <div class="form-field-group">
+            <label class="form-label">{{ t('common.date') }}</label>
+            <Datepicker
+                v-model="editableLesson.lessonDate"
+                :placeholder="t('actions.select')"
+                :enable-time-picker="false"
+                :format="'dd MMMM'"
+                :preview-format="'dd MMMM'"
+                :auto-apply="true"
+                :locale="locale"
+                hide-input-icon
+                input-class-name="custom-datepicker-input"
+                @update:model-value="handleDateChange"
+            />
+          </div>
+        </div>
+
+        <div class="button-group">
+          <button class="action-button danger-button flex-grow button-close" @click="close">
+            {{ t('actions.cancel') }}
+          </button>
+          <button
+              class="action-button primary-button flex-grow button-next"
+              :disabled="!editableLesson.lessonDate"
+              @click="submitReschedule"
+          >
+            {{ submitButtonText }}
+          </button>
+        </div>
       </div>
 
       <div v-if="isChangeTeacherView" class="form-container change-teacher-form">
