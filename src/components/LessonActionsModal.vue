@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, computed, onMounted } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { Icon } from '@iconify/vue';
 import { useI18n } from 'vue-i18n';
 import Datepicker from '@vuepic/vue-datepicker';
@@ -49,16 +49,24 @@ const submitButtonText = computed(() => {
 watch(() => props.isOpen, (newVal) => {
   if (newVal) {
     if (props.lesson) {
+      let initialDate = null;
+      if (props.lesson.lessonDate) {
+        const parsedDate = new Date(props.lesson.lessonDate);
+        if (!isNaN(parsedDate.getTime())) {
+          initialDate = parsedDate;
+        } else {
+          console.error('Received an invalid date format:', props.lesson.lessonDate);
+        }
+      }
       editableLesson.value = {
         id: props.lesson.id,
-        lessonDate: props.lesson.lessonDate ? new Date(props.lesson.lessonDate) : null,
+        lessonDate: initialDate,
         teacherId: props.lesson.teacher,
         teacherName: props.lesson.teacherName || null,
       };
     }
     currentView.value = 'actions';
     isClosing.value = false;
-    // fetchTeachers();
   } else {
     isClosing.value = true;
     setTimeout(() => {
@@ -101,28 +109,23 @@ const switchToActionsView = () => {
 
 const handleDateChange = (newDatePart) => {
   if (!newDatePart) return;
-  const currentDate = editableLesson.value.lessonDate ? new Date(editableLesson.value.lessonDate) : new Date();
-  currentDate.setFullYear(newDatePart.getFullYear(), newDatePart.getMonth(), newDatePart.getDate());
-  editableLesson.value.lessonDate = currentDate;
+  // Створюємо новий об'єкт Date, щоб гарантувати реактивність
+  const newDate = new Date(editableLesson.value.lessonDate || new Date());
+  newDate.setFullYear(newDatePart.getFullYear(), newDatePart.getMonth(), newDatePart.getDate());
+  editableLesson.value.lessonDate = newDate;
 };
 
 const handleTimeChange = (newTimePart) => {
   if (!newTimePart || typeof newTimePart.hours === 'undefined' || typeof newTimePart.minutes === 'undefined') {
     return;
   }
-
-  // Створюємо новий об'єкт Date на основі існуючого (або поточної дати),
-  // щоб гарантувати реактивність Vue.
   const newDate = new Date(editableLesson.value.lessonDate || new Date());
-
-  // Встановлюємо години та хвилини для нового об'єкта.
   newDate.setHours(newTimePart.hours);
   newDate.setMinutes(newTimePart.minutes);
   newDate.setSeconds(0);
-
-  // Присвоюємо повністю новий об'єкт, що змушує Vue оновитися.
   editableLesson.value.lessonDate = newDate;
 };
+
 
 const handleTrainerSelected = (trainerName) => {
   editableLesson.value.teacherName = trainerName;
@@ -139,7 +142,6 @@ const submitReschedule = async () => {
     console.error(t('errors.reschedule-missing-fields'));
     return;
   }
-  // Відправляємо подію з двома ключами: оригінальний урок і нова дата
   emit('rescheduleLesson', {
     originalLesson: props.lesson,
     newDate: editableLesson.value.lessonDate
@@ -164,34 +166,7 @@ const submitChangeTeacher = async () => {
   }
 };
 
-// const fetchTeachers = async () => {
-//   try {
-//     const config = { params: { paginate: false } };
-//     const { data } = await api.get('/users/v1/staff', config);
-//     teachers.value = data.map((user) => ({
-//       label: `${user.lastName} ${user.firstName}`,
-//       value: user.id
-//     }));
-//     if (editableLesson.value.teacherId && !editableLesson.value.teacherName) {
-//       const currentTeacher = teachers.value.find(t => t.value === editableLesson.value.teacherId);
-//       if (currentTeacher) {
-//         editableLesson.value.teacherName = currentTeacher.label;
-//       }
-//     }
-//   }
-//   catch (error) {
-//     console.error('Error fetching teachers:', error);
-//   }
-// };
-
-// onMounted(() => {
-//   if (props.isOpen) {
-//     fetchTeachers();
-//   }
-// });
-
 const lessonTimeFormatted = computed(() => {
-  console.log(editableLesson.value.lessonDate);
   if (editableLesson.value.lessonDate instanceof Date && !isNaN(editableLesson.value.lessonDate)) {
     const date = editableLesson.value.lessonDate;
     const hours = String(date.getHours()).padStart(2, '0');
