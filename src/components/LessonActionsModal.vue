@@ -107,20 +107,10 @@ const handleDateChange = (newDatePart) => {
 };
 
 const handleTimeChange = (newTimePart) => {
-  // newTimePart від time-picker'а — це об'єкт, наприклад: { hours: 14, minutes: 30 }
-  if (!newTimePart || typeof newTimePart.hours === 'undefined' || typeof newTimePart.minutes === 'undefined') {
-    return; // Ігноруємо, якщо дані некоректні
-  }
-
-  // Беремо поточну дату або створюємо нову, якщо дата ще не встановлена
+  if (!newTimePart) return;
   const currentDate = editableLesson.value.lessonDate ? new Date(editableLesson.value.lessonDate) : new Date();
-
-  // Встановлюємо години та хвилини з властивостей об'єкта newTimePart
-  currentDate.setHours(newTimePart.hours);
-  currentDate.setMinutes(newTimePart.minutes);
-  currentDate.setSeconds(0); // Рекомендується також скидати секунди
-
-  // Оновлюємо стан
+  currentDate.setHours(newTimePart.getHours());
+  currentDate.setMinutes(newTimePart.getMinutes());
   editableLesson.value.lessonDate = currentDate;
 };
 
