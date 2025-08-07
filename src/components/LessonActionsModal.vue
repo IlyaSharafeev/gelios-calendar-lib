@@ -34,8 +34,6 @@ const editableLesson = ref({
   teacherName: null,
 });
 
-const teachers = ref([]);
-
 const isActionsView = computed(() => currentView.value === 'actions');
 const isRescheduleView = computed(() => currentView.value === 'reschedule');
 const isChangeTeacherView = computed(() => currentView.value === 'change-teacher');
@@ -103,40 +101,6 @@ const switchToChangeTeacherView = () => {
   currentView.value = 'change-teacher';
 };
 
-const switchToActionsView = () => {
-  currentView.value = 'actions';
-};
-
-const handleDateChange = (newDatePart) => {
-  if (!newDatePart) return;
-  // Створюємо новий об'єкт Date, щоб гарантувати реактивність
-  const newDate = new Date(editableLesson.value.lessonDate || new Date());
-  newDate.setFullYear(newDatePart.getFullYear(), newDatePart.getMonth(), newDatePart.getDate());
-  editableLesson.value.lessonDate = newDate;
-};
-
-const handleTimeChange = (newTimePart) => {
-  if (!newTimePart || typeof newTimePart.hours === 'undefined' || typeof newTimePart.minutes === 'undefined') {
-    return;
-  }
-  const newDate = new Date(editableLesson.value.lessonDate || new Date());
-  newDate.setHours(newTimePart.hours);
-  newDate.setMinutes(newTimePart.minutes);
-  newDate.setSeconds(0);
-  editableLesson.value.lessonDate = newDate;
-};
-
-
-const handleTrainerSelected = (trainerName) => {
-  editableLesson.value.teacherName = trainerName;
-  const selectedTeacherObject = teachers.value.find(t => t.label === trainerName);
-  if (selectedTeacherObject) {
-    editableLesson.value.teacherId = selectedTeacherObject.value;
-  } else {
-    editableLesson.value.teacherId = null;
-  }
-};
-
 const submitReschedule = async () => {
   if (!editableLesson.value.lessonDate || !props.lesson) {
     console.error(t('errors.reschedule-missing-fields'));
@@ -165,16 +129,6 @@ const submitChangeTeacher = async () => {
     console.error(t('errors.change-teacher-error'), error);
   }
 };
-
-const lessonTimeFormatted = computed(() => {
-  if (editableLesson.value.lessonDate instanceof Date && !isNaN(editableLesson.value.lessonDate)) {
-    const date = editableLesson.value.lessonDate;
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${hours}:${minutes}`;
-  }
-  return '00:00';
-});
 </script>
 
 <template>
@@ -208,40 +162,17 @@ const lessonTimeFormatted = computed(() => {
       </div>
 
       <div v-if="isRescheduleView" class="form-container reschedule-form">
-        <div class="form-row">
-          <div class="form-field-group mr-4">
-            <label class="form-label">{{ t('common.time') }}</label>
-            <Datepicker
-                v-model="editableLesson.lessonDate"
-                :placeholder="t('actions.select')"
-                :enable-time-picker="true"
-                :is-24="true"
-                :format="'HH:mm'"
-                :preview-format="'HH:mm'"
-                :auto-apply="true"
-                :time-picker="true"
-                :date-picker="false"
-                :locale="locale"
-                hide-input-icon
-                input-class-name="custom-datepicker-input"
-                @update:model-value="handleTimeChange"
-            />
-          </div>
-          <div class="form-field-group">
-            <label class="form-label">{{ t('common.date') }}</label>
-            <Datepicker
-                v-model="editableLesson.lessonDate"
-                :placeholder="t('actions.select')"
-                :enable-time-picker="false"
-                :format="'dd MMMM'"
-                :preview-format="'dd MMMM'"
-                :auto-apply="true"
-                :locale="locale"
-                hide-input-icon
-                input-class-name="custom-datepicker-input"
-                @update:model-value="handleDateChange"
-            />
-          </div>
+        <div class="form-field-group">
+          <label class="form-label">{{ t('common.date-and-time') }}</label>
+          <Datepicker
+              v-model="editableLesson.lessonDate"
+              :placeholder="t('actions.select')"
+              :is-24="true"
+              :auto-apply="true"
+              :locale="locale"
+              hide-input-icon
+              input-class-name="custom-datepicker-input"
+          />
         </div>
 
         <div class="button-group">
@@ -257,7 +188,6 @@ const lessonTimeFormatted = computed(() => {
           </button>
         </div>
       </div>
-
       <div v-if="isChangeTeacherView" class="form-container change-teacher-form">
       </div>
     </div>
@@ -402,21 +332,11 @@ const lessonTimeFormatted = computed(() => {
   padding: 0;
 }
 
-.form-row {
-  display: flex;
-  align-items: flex-start;
-  margin-bottom: 24px;
-}
-
 .form-field-group {
   display: flex;
   flex-direction: column;
-  flex: 1;
-  margin-bottom: 16px;
-}
-
-.form-field-group.mr-4 {
-  margin-right: 16px;
+  width: 100%; /* Займає всю ширину */
+  margin-bottom: 24px; /* Відступ знизу */
 }
 
 .form-label {
@@ -448,6 +368,7 @@ const lessonTimeFormatted = computed(() => {
 .button-group {
   display: flex;
   gap: 16px;
+  margin-top: 16px; /* Додаємо відступ зверху */
 }
 
 .flex-grow {
@@ -457,5 +378,4 @@ const lessonTimeFormatted = computed(() => {
 .change-teacher-form {
   padding: 0;
 }
-
 </style>
