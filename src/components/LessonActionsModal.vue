@@ -107,21 +107,21 @@ const handleDateChange = (newDatePart) => {
 };
 
 const handleTimeChange = (newTimePart) => {
-  // newTimePart від time-picker'а — це об'єкт, наприклад: { hours: 14, minutes: 30 }
   if (!newTimePart || typeof newTimePart.hours === 'undefined' || typeof newTimePart.minutes === 'undefined') {
-    return; // Ігноруємо, якщо дані некоректні
+    return;
   }
 
-  // Беремо поточну дату або створюємо нову, якщо дата ще не встановлена
-  const currentDate = editableLesson.value.lessonDate ? new Date(editableLesson.value.lessonDate) : new Date();
+  // Створюємо новий об'єкт Date на основі існуючого (або поточної дати),
+  // щоб гарантувати реактивність Vue.
+  const newDate = new Date(editableLesson.value.lessonDate || new Date());
 
-  // Встановлюємо години та хвилини з властивостей об'єкта newTimePart
-  currentDate.setHours(newTimePart.hours);
-  currentDate.setMinutes(newTimePart.minutes);
-  currentDate.setSeconds(0); // Рекомендується також скидати секунди
+  // Встановлюємо години та хвилини для нового об'єкта.
+  newDate.setHours(newTimePart.hours);
+  newDate.setMinutes(newTimePart.minutes);
+  newDate.setSeconds(0);
 
-  // Оновлюємо стан
-  editableLesson.value.lessonDate = currentDate;
+  // Присвоюємо повністю новий об'єкт, що змушує Vue оновитися.
+  editableLesson.value.lessonDate = newDate;
 };
 
 const handleTrainerSelected = (trainerName) => {
