@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import {onMounted, ref, watch} from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-// Убраны импорты старого api, так как они больше не нужны здесь
-import { format, parse, isWithinInterval } from 'date-fns'
+import { format, parse } from 'date-fns'
 
-// Импортируем оба стора
+// Импортируем сторы
 import { useTeacherScheduleStore } from '../store/teacherScheduleStore.js'
 import { useStudentScheduleStore } from '../store/studentScheduleStore.js'
 
@@ -13,29 +12,22 @@ import WeekCalendar from '../components/WeekCalendar.vue'
 import LessonScheduleCalendarCell from '../components/LessonScheduleCalendarCell.vue'
 import authStore from '../store/authStore.js';
 
-// Type definitions for better clarity
+// Type definitions for better clarity (ОБНОВЛЕНО)
 interface Schedule {
   id: number;
   childCourse: number;
-  dayOfWeek: string;
-  startTime: string;
-  endTime: string;
-  child: { id: number; firstName: string; lastName: string; patronymic: string };
-  teacher: { id: number; firstName: string; lastName: string; patronymic: string };
+  date: string; // '2025-08-04'
+  startTime: string; // '13:31:00'
+  endTime: string; // '14:31:00'
+  child: { id: string; firstName: string; lastName: string; };
+  teacher: { id: string; firstName: string; lastName: string; };
   direction: { id: number; en: string; uk: string; ru: string };
-  startDate: string | null;
+  link: string | null;
+  course_status: 'FROZEN' | 'ACTIVE' | string; // Добавляем возможные статусы курса
+  status: 'SCHEDULED' | 'RESCHEDULED' | 'CANCELLED' | string; // Добавляем статусы урока
 }
 
-// NOTE: Логика заморозок (freezes) пока отключена, так как для нового API
-// не предоставлен отдельный эндпоинт для них.
-interface Freeze {
-  id: number;
-  childCourse: number;
-  startDate: string;
-  endDate: string;
-}
-
-interface CalendarItem extends Schedule {
+interface CalendarItem extends Omit<Schedule, 'date' | 'startTime' | 'endTime'> {
   isFrozen: boolean;
   lessonDate: Date;
   time: {
@@ -51,74 +43,43 @@ const route = useRoute()
 const teacherScheduleStore = useTeacherScheduleStore();
 const studentScheduleStore = useStudentScheduleStore();
 
-const instance = ref({ data: [], total: 0 })
+const instance = ref<{ data: CalendarItem[]; total: number }>({ data: [], total: 0 })
 const viewMode = ref(localStorage.getItem('viewMode') || null);
 
 const dateRange = ref({startDate: null, endDate: null})
 
 // Handle schedule click for navigation
-const handleScheduleClick = (schedule) => {
+const handleScheduleClick = (schedule: CalendarItem) => {
   console.log('Переход к уроку (навигация):', schedule)
 }
 
-// Simplified mapping of day names to JavaScript day numbers (0-6)
-const DAY_NAME_TO_JS_DAY = {
-  'MONDAY': 1, 'TUESDAY': 2, 'WEDNESDAY': 3, 'THURSDAY': 4, 'FRIDAY': 5, 'SATURDAY': 6, 'SUNDAY': 0
-};
-
 /**
- * Converts schedules and freeze data into calendar items
+ * Converts schedules data into calendar items (ОБНОВЛЕНО)
+ * @param schedules - The array of lesson objects from the API.
  */
-const processSchedulesAndFreezes = (
-    schedules: Schedule[],
-    freezes: Freeze[] // Принимаем заморозки, но сейчас они всегда будут пустым массивом
-) => {
-  if (!dateRange.value.startDate || !dateRange.value.endDate) {
+const processSchedules = (schedules: Schedule[]) => {
+  if (!schedules) {
     return { data: [], total: 0 };
   }
 
-  const startDate = parse(dateRange.value.startDate, 'yyyy-MM-dd', new Date());
-  const endDate = parse(dateRange.value.endDate, 'yyyy-MM-dd', new Date());
-  const calendarItems: CalendarItem[] = [];
+  const calendarItems: CalendarItem[] = schedules
+      // Фильтруем отмененные уроки, чтобы не отображать их
+      .filter(schedule => schedule.status !== 'CANCELLED')
+      .map(schedule => {
+        // Создаем объект Date из строки даты и времени
+        const lessonDate = parse(`${schedule.date} ${schedule.startTime}`, 'yyyy-MM-dd HH:mm:ss', new Date());
 
-  const allDatesInRange: Date[] = [];
-  let currentDate = new Date(startDate);
-
-  while (currentDate <= endDate) {
-    allDatesInRange.push(new Date(currentDate));
-    currentDate.setDate(currentDate.getDate() + 1);
-  }
-
-  schedules.forEach(schedule => {
-    const scheduleDayNumber = DAY_NAME_TO_JS_DAY[schedule.dayOfWeek];
-    const matchingDates = allDatesInRange.filter(date => date.getDay() === scheduleDayNumber);
-
-    matchingDates.forEach(date => {
-      if (schedule.startDate) {
-        const scheduleStartDate = parse(schedule.startDate, 'yyyy-MM-dd', new Date());
-        if (date < scheduleStartDate) return;
-      }
-
-      // Поскольку эндпоинта для заморозок нет, считаем что заморозок нет
-      const isFrozen = false;
-
-      const scheduledStartDate = new Date(date);
-      const startTimeParts = (schedule.startTime || '00:00:00').split(':');
-      scheduledStartDate.setHours(parseInt(startTimeParts[0], 10), parseInt(startTimeParts[1], 10));
-
-      const scheduledEndDate = new Date(date);
-      const endTimeParts = (schedule.endTime || '00:00:00').split(':');
-      scheduledEndDate.setHours(parseInt(endTimeParts[0], 10), parseInt(endTimeParts[1], 10));
-
-      calendarItems.push({
-        ...schedule, isFrozen, lessonDate: scheduledStartDate,
-        time: {
-          start: format(new Date(scheduledStartDate), 'HH:mm'),
-          end: format(new Date(scheduledEndDate), 'HH:mm')
-        }
+        return {
+          ...schedule,
+          // isFrozen теперь зависит от статуса курса
+          isFrozen: schedule.course_status === 'FROZEN',
+          lessonDate: lessonDate,
+          time: {
+            start: format(lessonDate, 'HH:mm'),
+            end: format(parse(schedule.endTime, 'HH:mm:ss', new Date()), 'HH:mm')
+          }
+        };
       });
-    });
-  });
 
   return { data: calendarItems, total: calendarItems.length };
 };
@@ -129,60 +90,55 @@ const fetch = async () => {
   }
 
   try {
-    if (viewMode.value === 'teacher') {
-      const params = {
-        start_date: dateRange.value.startDate,
-        end_date: dateRange.value.endDate,
-        search: route.query.search || null,
-      };
-      await teacherScheduleStore.fetchTeacherSchedule(params);
-      // Обрабатываем данные, передавая пустой массив для заморозок
-      instance.value = processSchedulesAndFreezes(teacherScheduleStore.schedule, []);
+    const params = {
+      start_date: dateRange.value.startDate,
+      end_date: dateRange.value.endDate,
+      search: route.query.search || null,
+      // Эти параметры будут использоваться только если они есть в URL
+      child_id: route.query.child_id || null,
+      teacher_id: route.query.teacher_id || null,
+    };
 
-    } else { // Логика для режима СТУДЕНТА
-      const params = {
-        start_date: dateRange.value.startDate,
-        end_date: dateRange.value.endDate,
-        search: route.query.search || null,
-        child_id: route.query.child_id || null,
-        teacher_id: route.query.teacher_id || null,
-      };
+    if (viewMode.value === 'teacher') {
+      await teacherScheduleStore.fetchTeacherSchedule(params);
+      instance.value = processSchedules(teacherScheduleStore.schedule);
+    } else { // Логика для режима СТУДЕНTA
       await studentScheduleStore.fetchStudentSchedule(params);
-      // Обрабатываем данные, передавая пустой массив для заморозок
-      instance.value = processSchedulesAndFreezes(studentScheduleStore.schedule, []);
+      instance.value = processSchedules(studentScheduleStore.schedule);
     }
   } catch (err) {
     console.error('Error fetching data:', err);
   }
 }
 
-const handleWeekChange = (range) => {
+const handleWeekChange = (range: { start_date: string; end_date: string }) => {
   dateRange.value = {
     startDate: format(new Date(range.start_date), 'yyyy-MM-dd'),
     endDate: format(new Date(range.end_date), 'yyyy-MM-dd')
   };
-  fetch();
+  // Не нужно вызывать fetch здесь, так как watch отследит изменение dateRange
 }
 
-const handleLessonCancel = async (lesson) => {
+const handleLessonCancel = async (lesson: CalendarItem) => {
   if (!lesson || !lesson.id || !lesson.lessonDate) {
     console.error('Недостаточно данных для отмены урока:', lesson);
     return;
   }
 
   try {
+    // В payload для отмены нам нужен ID урока и его оригинальная дата
     const payload = {
-      lessonScheduleId: lesson.id,
-      date: format(new Date(lesson.lessonDate), 'yyyy-MM-dd')
+      id: lesson.id,
+      lessonDate: lesson.lessonDate
     };
 
     console.log('Отправка запроса на отмену урока с данными:', payload);
 
-    // 2. Вызываем метод из хранилища
+    // Вызываем метод из хранилища
     await studentScheduleStore.cancelLesson(payload);
 
     console.log('Урок успешно отменен.');
-
+    // Обновляем данные после отмены
     fetch();
 
   } catch (err) {
@@ -191,9 +147,9 @@ const handleLessonCancel = async (lesson) => {
 };
 
 watch(
-    () => [route.query.search, route.query.teacher_id, route.query.child_id, authStore.token, viewMode.value],
+    () => [route.query.search, route.query.teacher_id, route.query.child_id, authStore.token, viewMode.value, dateRange.value],
     fetch,
-    { immediate: true }
+    { immediate: true, deep: true }
 );
 
 onMounted(() => {
@@ -204,10 +160,12 @@ onMounted(() => {
           authStore.setTokens(event.data.accessToken, event.data.refreshToken);
           break;
         case 'SET_VIEW_MODE':
-          viewMode.value = event.data.viewMode;
-          localStorage.setItem('viewMode', event.data.viewMode);
+          const newMode = event.data.viewMode;
+          if (viewMode.value !== newMode) {
+            viewMode.value = newMode;
+            localStorage.setItem('viewMode', newMode);
+          }
           break;
-          // NOTE: обработчик для 'SET_API_BASE_URL' убран, так как он больше не нужен
       }
     }
   });
@@ -227,7 +185,6 @@ onMounted(() => {
           :view-mode="viewMode"
           @week-change="handleWeekChange"
           @item-click="handleScheduleClick"
-          @cancel-lesson="handleLessonCancel"
       >
         <template #calendarItem="{ item }">
           <LessonScheduleCalendarCell :item="item" />
