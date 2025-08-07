@@ -181,6 +181,7 @@ const submitChangeTeacher = async () => {
 // });
 
 const lessonTimeFormatted = computed(() => {
+  console.log(editableLesson.value.lessonDate);
   if (editableLesson.value.lessonDate instanceof Date && !isNaN(editableLesson.value.lessonDate)) {
     const date = editableLesson.value.lessonDate;
     const hours = String(date.getHours()).padStart(2, '0');
