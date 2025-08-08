@@ -49,11 +49,11 @@ const emit = defineEmits(['itemClick'])
 
 <template>
   <div
-      class="flex items-center justify-between px-3 py-2.5 cursor-pointer transition-colors rounded-xl"
+      class="flex item-shedule items-center justify-between px-3 py-2.5 cursor-pointer transition-colors rounded-xl"
       :class="cellClass"
   >
     <div
-        class="flex items-center text-xs font-medium rounded-full px-2 py-1"
+        class="flex item-shedule-badge items-center text-xs font-medium rounded-full px-2 py-1"
         :class="badgeClass"
     >
       {{ time }}
@@ -67,3 +67,14 @@ const emit = defineEmits(['itemClick'])
     </div>
   </div>
 </template>
+
+<style lang="scss">
+.item-shedule {
+  background-color: #6B7280;
+
+  .item-shedule-badge {
+    background-color: #0066FF1A;
+    color: #0066FF;
+  }
+}
+</style>
