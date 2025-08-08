@@ -25,7 +25,7 @@ const cellClass = computed(() => {
   }
   // Перенесённые уроки - голубой фон
   if (props.item.status === 'RESCHEDULED') {
-    return 'bg-gblue-5';
+    return '';
   }
   // Замороженные уроки (если они не отменены)
   if (isFrozen.value) {
