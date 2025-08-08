@@ -60,12 +60,13 @@
     "archive": "Архивировать",
     "processing": "Обработка",
     "add-payment": "Добавить платеж",
-    "cancel": "Отмена",
+    "cancel": "Отменить",
     "done": "Готово",
     "send": "Отправить",
     "reset_password": "Сброс пароля",
     "restore_password": "Восстановить Пароль",
-    "reschedule": "Перенести"
+    "reschedule": "Перенести",
+    "confirm": "Подтвердить"
   },
   "user": {
     "avatar": "Ава",
@@ -215,5 +216,10 @@
     "reschedule-error": "Ошибка переноса урока:",
     "change-teacher-missing-fields": "ID учителя или ID урока отсутствует для смены учителя.",
     "change-teacher-error": "Ошибка смены учителя:"
+  },
+  "confirmation": {
+    "title": "Подтверждение действия",
+    "cancelLessonMessage": "Вы уверены, что хотите отменить этот урок?",
+    "rescheduleLessonMessage": "Вы уверены, что хотите перенести этот урок?"
   }
 }

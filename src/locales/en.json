@@ -65,7 +65,8 @@
     "send": "Send",
     "reset_password": "Reset Password",
     "restore_password": "Restore Password",
-    "reschedule": "Reschedule"
+    "reschedule": "Reschedule",
+    "confirm": "Confirm"
   },
   "user": {
     "avatar": "Avatar",
@@ -215,5 +216,10 @@
     "reschedule-error": "Error rescheduling lesson:",
     "change-teacher-missing-fields": "Teacher ID or Lesson ID is missing for changing teacher.",
     "change-teacher-error": "Error changing teacher:"
+  },
+  "confirmation": {
+    "title": "Action Confirmation",
+    "cancelLessonMessage": "Are you sure you want to cancel this lesson?",
+    "rescheduleLessonMessage": "Are you sure you want to reschedule this lesson?"
   }
 }
