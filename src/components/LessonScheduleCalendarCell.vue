@@ -43,7 +43,7 @@ const badgeClass = computed(() => {
   }
   // Для перенесенных уроков (чтобы текст был читаемым на голубом фоне)
   if (props.item.status === 'RESCHEDULED') {
-    return 'text-gblue-100 bg-white';
+    return '';
   }
   // Для замороженных уроков
   if (isFrozen.value) {
