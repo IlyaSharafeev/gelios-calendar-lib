@@ -35,7 +35,6 @@ const props = defineProps({
   }
 })
 
-// ✅ ИЗМЕНЕНИЕ: Добавлены новые события
 const emit = defineEmits(['weekChange', 'itemClick', 'cancel-lesson', 'reschedule-lesson'])
 
 const { t, locale } = useI18n()
@@ -85,7 +84,12 @@ const formatDateRange = computed(() => {
   return `${formatDate(firstDay)} - ${formatDate(lastDay)}`
 })
 
+// ✅ ИЗМЕНЕНИЕ: Добавлена проверка. Если урок отменен, модальное окно не открывается.
 const handleItemClick = (item: any) => {
+  if (item.status === 'CANCELLED') {
+    return;
+  }
+
   if (props.viewMode === 'teacher') {
     openLessonActionsModal(item, 'teacher');
   } else {
@@ -169,12 +173,10 @@ const handleLessonActionsModalClose = () => {
   selectedLesson.value = null;
 };
 
-// ✅ ИЗМЕНЕНИЕ: Теперь просто генерируем событие
 const handleCancelLesson = (lesson: any) => {
   emit('cancel-lesson', lesson);
 };
 
-// ✅ ИЗМЕНЕНИЕ: Теперь просто генерируем событие
 const handleRescheduleSuccess = (payload: { originalLesson: any; newDate: any }) => {
   emit('reschedule-lesson', payload);
 };
