@@ -11,77 +11,62 @@ const props = defineProps({
   }
 })
 
-const time = computed(() => `${props.item.time.start} - ${props.item.time.end}`)
+// ✅ ИЗМЕНЕНИЕ: Теперь отображается только время начала урока
+const time = computed(() => props.item.time.start)
 const direction = computed(() => props.item.direction[locale.value])
 const child = computed(() => `${props.item.child.lastName} ${props.item.child.firstName.charAt(0)}.`)
 const teacher = computed(() => `${props.item.teacher.lastName} ${props.item.teacher.firstName.charAt(0)}.`)
 const isFrozen = computed(() => props.item.isFrozen)
+const isCancelled = computed(() => props.item.status === 'CANCELLED')
 
+// Класс для всей ячейки (меняет фон)
 const cellClass = computed(() => {
-  // Отменённые уроки - красный фон, курсор неактивен
-  if (props.item.status === 'CANCELLED') {
-    return 'bg-gred-5 cursor-not-allowed';
-  }
-  // Перенесённые уроки - голубой фон
-  if (props.item.status === 'RESCHEDULED') {
-    return '';
-  }
-  // Замороженные уроки (если они не отменены)
-  if (isFrozen.value) {
-    return 'bg-gred-5 hover:cursor-not-allowed';
-  }
-  // Стиль по умолчанию с ховером
-  return 'hover:bg-gblue-5';
+  if (isCancelled.value) return 'bg-gred-5 cursor-not-allowed'
+  if (isFrozen.value) return 'bg-gred-5 hover:cursor-not-allowed'
+  return 'hover:bg-gblue-5'
 });
 
+// ✅ ИЗМЕНЕНИЕ: Класс для плашки времени (бейджа). По умолчанию теперь синий.
 const badgeClass = computed(() => {
-  // Для отмененных или замороженных уроков - красный индикатор
-  if (props.item.status === 'CANCELLED' || isFrozen.value) {
-    return 'text-gred-100 bg-gred-10';
+  if (isCancelled.value || isFrozen.value) {
+    return 'text-gred-100 bg-gred-10'
   }
-  // Для всех остальных случаев (включая SCHEDULED и RESCHEDULED) - серый по умолчанию
-  return 'text-gblack-100 bg-gblack-10';
+  // Стиль по умолчанию, как на изображении
+  return 'text-gblue-100 bg-gblue-5'
 });
 
-const textColorClass = computed(() => {
-  if (props.item.status === 'CANCELLED') {
-    return 'text-gred-100'; // Красный текст для отмененных
-  }
-  return {
-    child: 'text-gblack-100', // Стандартный цвет для имени
-    details: 'text-gblack-50' // Стандартный цвет для деталей
-  };
-});
+// ✅ ИЗМЕНЕНИЕ: Классы для текста. Становятся красными, если урок отменен.
+const primaryTextColor = computed(() => isCancelled.value ? 'text-gred-100' : 'text-gblack-100');
+const secondaryTextColor = computed(() => isCancelled.value ? 'text-gred-100' : 'text-gblack-50');
 
-const childTextColor = computed(() => {
-  return typeof textColorClass.value === 'string' ? textColorClass.value : textColorClass.value.child;
-});
-
-const detailsTextColor = computed(() => {
-  return typeof textColorClass.value === 'string' ? textColorClass.value : textColorClass.value.details;
-});
-
-
-const emit = defineEmits(['itemClick'])
 </script>
 
 <template>
   <div
-      class="flex item-shedule items-center justify-between px-3 py-2.5 cursor-pointer transition-colors rounded-xl"
+      class="flex items-center justify-between px-3 py-2.5 cursor-pointer transition-colors rounded-xl"
       :class="cellClass"
   >
-    <div
-        class="flex item-shedule-badge items-center text-xs font-medium rounded-full px-2 py-1"
-        :class="badgeClass"
-    >
-      {{ time }}
+    <div class="flex items-center gap-4">
+      <div
+          class="flex items-center text-sm font-medium rounded-full px-2.5 py-1"
+          :class="badgeClass"
+      >
+        {{ time }}
+      </div>
+
+      <div class="flex flex-col">
+        <span class="text-base font-medium" :class="primaryTextColor">{{ direction }}</span>
+        <span class="text-xs" :class="secondaryTextColor">{{ locale.toUpperCase() }}</span>
+      </div>
+
+      <div class="flex flex-col">
+        <span class="text-sm" :class="primaryTextColor">{{ teacher }}</span>
+        <span class="text-xs" :class="secondaryTextColor">тренер</span>
+      </div>
     </div>
 
-    <span class="text-xs" :class="childTextColor">{{ child }}</span>
-
-    <div class="flex gap-2.5 items-center">
-      <span class="text-xs font-medium" :class="detailsTextColor">{{ direction }}</span>
-      <span class="text-xs" :class="detailsTextColor">{{ teacher }}</span>
-    </div>
+    <span class="text-sm" :class="secondaryTextColor">
+      {{ child }}
+    </span>
   </div>
 </template>
