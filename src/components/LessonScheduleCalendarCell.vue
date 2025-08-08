@@ -36,11 +36,29 @@ const cellClass = computed(() => {
 
 const badgeClass = computed(() => {
   // Для отмененных или замороженных уроков - красный индикатор
-  if (props.item.status === 'CANCELLED') {
+  if (props.item.status === 'CANCELLED' || isFrozen.value) {
     return 'text-gred-100 bg-gred-10';
   }
   // Для всех остальных случаев (включая SCHEDULED и RESCHEDULED) - серый по умолчанию
   return 'text-gblack-100 bg-gblack-10';
+});
+
+const textColorClass = computed(() => {
+  if (props.item.status === 'CANCELLED') {
+    return 'text-gred-100'; // Красный текст для отмененных
+  }
+  return {
+    child: 'text-gblack-100', // Стандартный цвет для имени
+    details: 'text-gblack-50' // Стандартный цвет для деталей
+  };
+});
+
+const childTextColor = computed(() => {
+  return typeof textColorClass.value === 'string' ? textColorClass.value : textColorClass.value.child;
+});
+
+const detailsTextColor = computed(() => {
+  return typeof textColorClass.value === 'string' ? textColorClass.value : textColorClass.value.details;
 });
 
 
@@ -59,21 +77,11 @@ const emit = defineEmits(['itemClick'])
       {{ time }}
     </div>
 
-    <span class="text-xs text-gblack-100">{{ child }}</span>
+    <span class="text-xs" :class="childTextColor">{{ child }}</span>
 
     <div class="flex gap-2.5 items-center">
-      <span class="text-xs font-medium text-gblack-50">{{ direction }}</span>
-      <span class="text-xs text-gblack-50">{{ teacher }}</span>
+      <span class="text-xs font-medium" :class="detailsTextColor">{{ direction }}</span>
+      <span class="text-xs" :class="detailsTextColor">{{ teacher }}</span>
     </div>
   </div>
 </template>
-
-<style lang="scss">
-.item-shedule {
-
-  .item-shedule-badge {
-    background-color: #0066FF1A;
-    color: #0066FF;
-  }
-}
-</style>
