@@ -17,7 +17,6 @@ const child = computed(() => `${props.item.child.lastName} ${props.item.child.fi
 const teacher = computed(() => `${props.item.teacher.lastName} ${props.item.teacher.firstName.charAt(0)}.`)
 const isFrozen = computed(() => props.item.isFrozen)
 
-// Добавлено computed-свойство для классов ячейки
 const cellClass = computed(() => {
   // Отменённые уроки - красный фон, курсор неактивен
   if (props.item.status === 'CANCELLED') {
@@ -35,23 +34,15 @@ const cellClass = computed(() => {
   return 'hover:bg-gblue-5';
 });
 
-// Добавлено computed-свойство для классов индикатора времени
 const badgeClass = computed(() => {
-  // Для отмененных уроков
+  // Для отмененных или замороженных уроков - красный индикатор
   if (props.item.status === 'CANCELLED') {
     return 'text-gred-100 bg-gred-10';
   }
-  // Для перенесенных уроков (чтобы текст был читаемым на голубом фоне)
-  if (props.item.status === 'RESCHEDULED') {
-    return '';
-  }
-  // Для замороженных уроков
-  if (isFrozen.value) {
-    return 'text-gred-100 bg-gred-10';
-  }
-  // Стиль по умолчанию
-  return 'text-gblue-100 bg-gblue-5';
+  // Для всех остальных случаев (включая SCHEDULED и RESCHEDULED) - серый по умолчанию
+  return 'text-gblack-100 bg-gblack-10';
 });
+
 
 const emit = defineEmits(['itemClick'])
 </script>
