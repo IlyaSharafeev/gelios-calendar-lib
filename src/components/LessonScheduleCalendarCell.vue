@@ -70,7 +70,6 @@ const emit = defineEmits(['itemClick'])
 
 <style lang="scss">
 .item-shedule {
-  background-color: #6B7280;
 
   .item-shedule-badge {
     background-color: #0066FF1A;
