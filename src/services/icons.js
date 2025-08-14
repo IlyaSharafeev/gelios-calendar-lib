@@ -1,10 +1,10 @@
-import IconBriefcase from '@/components/icons/IconBriefcase.vue';
-import IconCrown from '@/components/icons/IconCrown.vue'
-import IconSettings from '@/components/icons/IconSettings.vue'
-import IconShoppingBagPlus from '@/components/icons/IconShoppingBagPlus.vue'
-import IconCash from '@/components/icons/IconCash.vue'
-import IconAcademicCap from '@/components/icons/IconAcademicCap.vue'
-import IconMegaphone from '@/components/icons/IconMegaphone.vue'
+import IconBriefcase from '@/modals/icons/IconBriefcase.vue';
+import IconCrown from '@/modals/icons/IconCrown.vue'
+import IconSettings from '@/modals/icons/IconSettings.vue'
+import IconShoppingBagPlus from '@/modals/icons/IconShoppingBagPlus.vue'
+import IconCash from '@/modals/icons/IconCash.vue'
+import IconAcademicCap from '@/modals/icons/IconAcademicCap.vue'
+import IconMegaphone from '@/modals/icons/IconMegaphone.vue'
 
 enum Icon {
   briefcase = 'briefcase',

@@ -65,7 +65,8 @@
     "send": "Надіслати",
     "reset_password": "Скидання пароля",
     "restore_password": "Відновити Пароль",
-    "reschedule": "Перенести"
+    "reschedule": "Перенести",
+    "confirm": "Підтвердити"
   },
   "user": {
     "avatar": "Ава",
@@ -215,5 +216,10 @@
     "reschedule-error": "Помилка перенесення уроку:",
     "change-teacher-missing-fields": "ID вчителя або ID уроку відсутні для зміни вчителя.",
     "change-teacher-error": "Помилка зміни вчителя:"
+  },
+  "confirmation": {
+    "title": "Підтвердження дії",
+    "cancelLessonMessage": "Ви впевнені, що хочете скасувати цей урок?",
+    "rescheduleLessonMessage": "Ви впевнені, що хочете перенести цей урок?"
   }
 }
