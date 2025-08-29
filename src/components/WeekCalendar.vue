@@ -84,7 +84,6 @@ const formatDateRange = computed(() => {
   return `${formatDate(firstDay)} - ${formatDate(lastDay)}`
 })
 
-// ✅ ИЗМЕНЕНИЕ: Добавлена проверка. Если урок отменен, модальное окно не открывается.
 const handleItemClick = (item: any) => {
   if (item.status === 'CANCELLED') {
     return;
@@ -141,6 +140,28 @@ const toggleExpand = (date: Date, hour: number) => {
   newExpanded.has(slotKey) ? newExpanded.delete(slotKey) : newExpanded.add(slotKey)
   expandedSlots.value = newExpanded
 }
+
+// ✅ ИЗМЕНЕНИЕ: Создание вычисляемого свойства для фильтрации часов
+const filteredHours = computed(() => {
+  const allHours = new Set<number>();
+  props.calendarItems.forEach(item => {
+    if (item && item[props.dateField]) {
+      const itemDate = new Date(item[props.dateField]);
+      const hour = itemDate.getHours();
+      allHours.add(hour);
+    }
+  });
+
+  // Если уроков нет, показываем стандартный диапазон, чтобы календарь не был пустым.
+  if (allHours.size === 0) {
+    for (let i = 8; i < 18; i++) {
+      allHours.add(i);
+    }
+  }
+
+  const sortedHours = Array.from(allHours).sort((a, b) => a - b);
+  return sortedHours;
+});
 
 const prevWeek = () => {
   currentDate.value = subWeeks(currentDate.value, 1)
@@ -202,12 +223,13 @@ onMounted(() => {
   <div class="flex h-full gap-8">
     <div class="flex flex-col gap-3 mt-[52px] flex-shrink-0">
       <div class="flex w-[108px] min-h-[88px] items-center justify-center bg-gblack-5 rounded-[22px] opacity-0 transition-all duration-300 animate-fade-in-up [animation-fill-mode:forwards]"
-           v-for="(hour, index) in 24"
+           v-for="(hour, index) in filteredHours"
+           :key="`time-${hour}`"
            :style="{
              'grid-template-columns': 'repeat(7, 340px)',
              'animation-delay': `${index * 50}ms`,
            }">
-        <span class="text-base font-medium text-gblack-50">{{ formatHour(hour - 1) }}</span>
+        <span class="text-base font-medium text-gblack-50">{{ formatHour(hour) }}</span>
       </div>
     </div>
 
@@ -224,21 +246,21 @@ onMounted(() => {
         </div>
 
         <div class="grid gap-3">
-          <div v-for="(hour, index) in 24" :key="hour"
+          <div v-for="(hour, index) in filteredHours" :key="hour"
                class="grid gap-6 opacity-0 transition-all duration-300 animate-fade-in-up [animation-fill-mode:forwards]"
                :style="{
                  'grid-template-columns': 'repeat(7, 340px)',
                  'animation-delay': `${index * 50}ms`,
                }">
             <div v-for="day in weekDays" :key="day.date + hour" class="min-h-[88px] bg-white rounded-xl">
-              <div v-for="record in displayRecords(day.fullDate, hour - 1)" :key="record[props.idField]"
+              <div v-for="record in displayRecords(day.fullDate, hour)" :key="record[props.idField]"
                    @click="handleItemClick(record)">
                 <slot name="calendarItem" :item="record"></slot>
               </div>
-              <div v-if="hasMoreRecords(day.fullDate, hour - 1)"
-                   @click="toggleExpand(day.fullDate, hour - 1)"
+              <div v-if="hasMoreRecords(day.fullDate, hour)"
+                   @click="toggleExpand(day.fullDate, hour)"
                    class="text-center cursor-pointer bg-gblack-3 py-0.5">
-                <Icon :class="isExpanded(day.fullDate, hour - 1) ? 'rotate-90' : '-rotate-90'"
+                <Icon :class="isExpanded(day.fullDate, hour) ? 'rotate-90' : '-rotate-90'"
                       icon="material-symbols:chevron-left" width="20" height="20" color="#0066FF"
                       class="mx-auto" />
               </div>
@@ -270,3 +292,45 @@ onMounted(() => {
       @reschedule-lesson="handleRescheduleSuccess"
   />
 </template>
+
+<style lang="scss">
+.add-lesson-wrapper {
+  display: flex;
+  justify-content: center;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #F3F3F5;
+
+  .add-lesson {
+    border: 1px solid #0066FF;
+    border-radius: 55px;
+    padding: 6px 34px;
+    color: #0066FF;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    &:hover {
+      background-color: #0066FF;
+      color: #fff;
+      border-color: #0066FF;
+      .icon-plus {
+        filter: brightness(0) invert(1);
+      }
+    }
+  }
+}
+.icon-plus {
+  background-image: url('@/assets/icons/plus.svg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  width: 16px;
+  height: 16px;
+  padding-bottom: 5px;
+  margin-bottom: 4px;
+  transition: filter 0.3s ease;
+}
+</style>
