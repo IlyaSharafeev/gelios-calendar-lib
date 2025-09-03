@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n';
 import Datepicker from '@vuepic/vue-datepicker';
 import api from '../services/api.js';
 import ConfirmationModal from '../components/modals/ConfirmationModal.vue';
+import { parseISO, isPast } from 'date-fns';
 
 const { t, locale } = useI18n();
 
@@ -36,6 +37,15 @@ const editableLesson = ref({
   lessonDate: null,
   teacherId: null,
   teacherName: null,
+});
+
+// ✅ ИЗМЕНЕНИЕ: Новое вычисляемое свойство для проверки, прошел ли урок.
+const isLessonInPast = computed(() => {
+  if (!props.lesson || !props.lesson.date || !props.lesson.endTime) {
+    return false;
+  }
+  const lessonDateTime = `${props.lesson.date}T${props.lesson.endTime}`;
+  return isPast(parseISO(lessonDateTime));
 });
 
 const isActionsView = computed(() => currentView.value === 'actions');
@@ -193,14 +203,16 @@ const submitChangeTeacher = async () => {
             {{ t('lesson.go-to-lesson') }}
           </a>
 
-          <button v-if="viewMode === 'teacher'" class="action-button success-text-button" @click="completeLesson('DONE')">
-            <Icon icon="material-symbols:done-all" width="20" height="20" />
-            {{ t('teacher.lesson_done') }}
-          </button>
-          <button v-if="viewMode === 'teacher'" class="action-button danger-text-button" @click="completeLesson('MISSED')">
-            <Icon icon="material-symbols:close-rounded" width="20" height="20" />
-            {{ t('teacher.lesson_missed') }}
-          </button>
+          <template v-if="viewMode === 'teacher' && isLessonInPast">
+            <button class="action-button success-text-button" @click="completeLesson('DONE')">
+              <Icon icon="material-symbols:done-all" width="20" height="20" />
+              {{ t('teacher.lesson_done') }}
+            </button>
+            <button class="action-button danger-text-button" @click="completeLesson('MISSED')">
+              <Icon icon="material-symbols:close-rounded" width="20" height="20" />
+              {{ t('teacher.lesson_missed') }}
+            </button>
+          </template>
 
           <button v-if="viewMode === 'student' || !viewMode" class="action-button danger-text-button" @click="triggerCancelLesson">
             <Icon icon="material-symbols:close-rounded" width="20" height="20" />
