@@ -114,7 +114,9 @@
       "solo-night": "Night form individual",
       "group-night": "Night form group"
     },
-    "no-teacher": "No teacher"
+    "no-teacher": "No teacher",
+    "lesson_done": "Lesson done",
+    "lesson_missed": "Lesson missed"
   },
   "employee": {
     "status": {

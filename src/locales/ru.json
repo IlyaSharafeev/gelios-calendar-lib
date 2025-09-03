@@ -114,7 +114,9 @@
       "solo-night": "Ночная форма индив",
       "group-night": "Ночная форма парная"
     },
-    "no-teacher": "Учитель отсутствует"
+    "no-teacher": "Учитель отсутствует",
+    "lesson_done": "Урок проведен",
+    "lesson_missed": "Урок пропущен"
   },
   "employee": {
     "status": {
