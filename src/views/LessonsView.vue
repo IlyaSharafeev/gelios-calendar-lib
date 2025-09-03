@@ -24,7 +24,7 @@ interface Schedule {
   direction: { id: number; en: string; uk: string; ru: string };
   link: string | null;
   course_status: 'FROZEN' | 'ACTIVE' | string;
-  status: 'SCHEDULED' | 'RESCHEDULED' | 'CANCELLED' | string;
+  status: 'SCHEDULED' | 'RESCHEDULED' | 'CANCELLED' | 'DONE' | 'MISSED' | string;
 }
 
 interface CalendarItem extends Omit<Schedule, 'date' | 'startTime' | 'endTime'> {
@@ -145,6 +145,12 @@ const handleLessonReschedule = async ({ originalLesson, newDate }: { originalLes
 };
 
 
+// ✅ ИЗМЕНЕНИЕ: Обработчик для обновления данных из календаря
+const handleLessonsUpdated = (updatedItems: any[]) => {
+  instance.value.data = updatedItems;
+};
+
+
 watch(
     () => [route.query.search, route.query.teacher_id, route.query.child_id, authStore.token, viewMode.value, dateRange.value],
     fetch,
@@ -186,6 +192,7 @@ onMounted(() => {
           @item-click="handleScheduleClick"
           @cancel-lesson="handleLessonCancel"
           @reschedule-lesson="handleLessonReschedule"
+          @lesson-updated="handleLessonsUpdated"
       >
         <template #calendarItem="{ item }">
           <LessonScheduleCalendarCell :item="item" />

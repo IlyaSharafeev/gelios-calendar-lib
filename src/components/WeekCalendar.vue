@@ -35,7 +35,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['weekChange', 'itemClick', 'cancel-lesson', 'reschedule-lesson'])
+const emit = defineEmits(['weekChange', 'itemClick', 'cancel-lesson', 'reschedule-lesson', 'lesson-updated'])
 
 const { t, locale } = useI18n()
 const currentDate = ref(new Date())
@@ -84,12 +84,15 @@ const formatDateRange = computed(() => {
   return `${formatDate(firstDay)} - ${formatDate(lastDay)}`
 })
 
+// ✅ ИЗМЕНЕНИЕ: Добавление проверки на прошедший урок и передача viewMode
 const handleItemClick = (item: any) => {
   if (item.status === 'CANCELLED') {
     return;
   }
 
-  if (props.viewMode === 'teacher') {
+  const lessonDateTime = new Date(item[props.dateField]);
+  const now = new Date();
+  if (props.viewMode === 'teacher' && lessonDateTime < now) {
     openLessonActionsModal(item, 'teacher');
   } else {
     openLessonActionsModal(item);
@@ -184,7 +187,7 @@ const emitWeekChange = () => {
   })
 }
 
-const openLessonActionsModal = (lesson: any) => {
+const openLessonActionsModal = (lesson: any, viewMode: string = props.viewMode) => {
   selectedLesson.value = lesson;
   isLessonActionsModalOpen.value = true;
 };
@@ -200,6 +203,17 @@ const handleCancelLesson = (lesson: any) => {
 
 const handleRescheduleSuccess = (payload: { originalLesson: any; newDate: any }) => {
   emit('reschedule-lesson', payload);
+};
+
+// ✅ ИЗМЕНЕНИЕ: Обработчик для обновления урока из модального окна
+const handleLessonUpdated = (updatedLesson: any) => {
+  const index = props.calendarItems.findIndex(item => item.id === updatedLesson.id);
+  if (index !== -1) {
+    const newItems = [...props.calendarItems];
+    newItems[index] = updatedLesson;
+    emit('lesson-updated', newItems);
+  }
+  handleLessonActionsModalClose();
 };
 
 onMounted(() => {
@@ -286,10 +300,11 @@ onMounted(() => {
   <LessonActionsModal
       :is-open="isLessonActionsModalOpen"
       :lesson="selectedLesson"
-      :view-mode="props.viewMode"
+      :view-mode="viewMode"
       @close="handleLessonActionsModalClose"
       @cancel-lesson="handleCancelLesson"
       @reschedule-lesson="handleRescheduleSuccess"
+      @lesson-updated="handleLessonUpdated"
   />
 </template>
 
