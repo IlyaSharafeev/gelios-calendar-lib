@@ -86,9 +86,14 @@ const statusText = computed(() => {
       {{ child }}
     </span>
 
-    <div v-if="isCompleted" class="status-indicator">
-      <Icon :icon="statusIcon" width="16" height="16" />
-      <span>{{ statusText }}</span>
+    <div v-if="item.status === 'DONE'" class="status-indicator success">
+      <Icon icon="material-symbols:check-circle-outline-rounded" width="16" height="16" />
+      <span>Проведено</span>
+    </div>
+
+    <div v-if="item.status === 'MISSED'" class="status-indicator danger">
+      <Icon icon="material-symbols:cancel-outline-rounded" width="16" height="16" />
+      <span>Пропущено</span>
     </div>
   </div>
 </template>
@@ -96,7 +101,7 @@ const statusText = computed(() => {
 <style scoped>
 .status-indicator {
   position: absolute;
-  top: 8px;
+  bottom: 8px;
   right: 8px;
   display: flex;
   align-items: center;
@@ -106,15 +111,15 @@ const statusText = computed(() => {
   text-transform: uppercase;
   padding: 2px 6px;
   border-radius: 8px;
+  line-height: 1;
+}
+
+.status-indicator.success {
   background-color: #f0fdf4; /* Light green for DONE */
   color: #16a34a; /* Green for DONE */
 }
 
-.status-indicator > span {
-  line-height: 1;
-}
-
-.status-indicator:has(svg[icon*="cancel"]) {
+.status-indicator.danger {
   background-color: #fef2f2; /* Light red for MISSED */
   color: #dc2626; /* Red for MISSED */
 }
