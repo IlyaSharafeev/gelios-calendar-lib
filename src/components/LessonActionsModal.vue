@@ -6,7 +6,7 @@ import Datepicker from '@vuepic/vue-datepicker';
 import api from '../services/api.js';
 import ConfirmationModal from '../components/modals/ConfirmationModal.vue';
 import { parseISO, isPast } from 'date-fns';
-import {useTeacherScheduleStore} from "@/store/teacherScheduleStore";
+import {useTeacherScheduleStore} from "../store/teacherScheduleStore";
 
 const { t, locale } = useI18n();
 
