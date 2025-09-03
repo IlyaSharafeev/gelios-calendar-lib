@@ -35,7 +35,8 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['weekChange', 'itemClick', 'cancel-lesson', 'reschedule-lesson'])
+// ✅ ИЗМЕНЕНИЕ: Добавление 'lesson-updated' в список событий, которые может эмитировать компонент.
+const emit = defineEmits(['weekChange', 'itemClick', 'cancel-lesson', 'reschedule-lesson', 'lesson-updated'])
 
 const { t, locale } = useI18n()
 const currentDate = ref(new Date())
@@ -290,6 +291,7 @@ onMounted(() => {
       @close="handleLessonActionsModalClose"
       @cancel-lesson="handleCancelLesson"
       @reschedule-lesson="handleRescheduleSuccess"
+      @lesson-updated="$emit('lesson-updated', $event)"
   />
 </template>
 
