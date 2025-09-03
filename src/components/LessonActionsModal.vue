@@ -142,7 +142,7 @@ const completeLesson = async (status: 'DONE' | 'MISSED') => {
   };
 
   try {
-    const response = await api.post('/api/teacher/lesson-complete', payload);
+    const response = await api.post('https://gelios-teacher.ddns.net/api/teacher/lesson-complete', payload);
     if (response.status === 200) {
       emit('lesson-updated', { ...props.lesson, status: status });
       close();
