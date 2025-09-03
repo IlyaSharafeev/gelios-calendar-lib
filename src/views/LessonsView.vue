@@ -144,6 +144,12 @@ const handleLessonReschedule = async ({ originalLesson, newDate }: { originalLes
   }
 };
 
+// ✅ ИЗМЕНЕНИЕ: Новый обработчик для обновления после действий преподавателя
+const handleLessonUpdated = async () => {
+  console.log('Урок обновлен в модальном окне. Выполняю повторную загрузку данных...');
+  await fetch();
+};
+
 
 watch(
     () => [route.query.search, route.query.teacher_id, route.query.child_id, authStore.token, viewMode.value, dateRange.value],
@@ -186,6 +192,7 @@ onMounted(() => {
           @item-click="handleScheduleClick"
           @cancel-lesson="handleLessonCancel"
           @reschedule-lesson="handleLessonReschedule"
+          @lesson-updated="handleLessonUpdated"
       >
         <template #calendarItem="{ item }">
           <LessonScheduleCalendarCell :item="item" />
