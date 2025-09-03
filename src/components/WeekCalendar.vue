@@ -252,7 +252,7 @@ onMounted(() => {
                  'grid-template-columns': 'repeat(7, 340px)',
                  'animation-delay': `${index * 50}ms`,
                }">
-            <div v-for="day in weekDays" :key="day.date + hour" class="min-h-[88px] bg-white rounded-xl">
+            <div v-for="day in weekDays" :key="day.date + hour" class="relative min-h-[88px] bg-white rounded-xl">
               <div v-for="record in displayRecords(day.fullDate, hour)" :key="record[props.idField]"
                    @click="handleItemClick(record)">
                 <slot name="calendarItem" :item="record"></slot>

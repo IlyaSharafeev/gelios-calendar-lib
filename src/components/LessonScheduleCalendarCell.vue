@@ -60,7 +60,7 @@ const statusText = computed(() => {
 
 <template>
   <div
-      class="relative flex items-center justify-between px-3 py-2.5 cursor-pointer transition-colors rounded-xl"
+      class="flex items-center justify-between px-3 py-2.5 cursor-pointer transition-colors rounded-xl"
       :class="cellClass"
   >
     <div class="flex items-center gap-4">
