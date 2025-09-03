@@ -7,6 +7,7 @@ import api from '../services/api.js';
 import ConfirmationModal from '../components/modals/ConfirmationModal.vue';
 import { parseISO, isPast } from 'date-fns';
 import {useTeacherScheduleStore} from "../store/teacherScheduleStore";
+import {useRoute} from "vue-router";
 
 const { t, locale } = useI18n();
 
@@ -106,6 +107,10 @@ const close = () => {
   emit('close');
 };
 
+const dateRange = ref({startDate: null, endDate: null})
+
+const route = useRoute()
+
 const closeConfirmationModal = () => {
   isConfirmModalOpen.value = false;
   actionToConfirm.value = null;
@@ -157,6 +162,13 @@ const completeLesson = async (status: 'DONE' | 'MISSED') => {
     const response = await api.post('https://gelios-teacher.ddns.net/api/teacher/lesson-complete', payload);
     if (response.status === 200 || response.status === 201 ) {
       emit('lesson-updated', { ...props.lesson, status: status });
+      const params = {
+        start_date: dateRange.value.startDate,
+        end_date: dateRange.value.endDate,
+        search: route.query.search || null,
+        child_id: route.query.child_id || null,
+        teacher_id: route.query.teacher_id || null,
+      };
       await teacherScheduleStore.fetchTeacherSchedule(params);
       close();
     } else {
