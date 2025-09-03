@@ -42,6 +42,18 @@ const isActionsView = computed(() => currentView.value === 'actions');
 const isRescheduleView = computed(() => currentView.value === 'reschedule');
 const isChangeTeacherView = computed(() => currentView.value === 'change-teacher');
 
+const isLessonPassed = computed(() => {
+  if (!props.lesson || !props.lesson.lessonDate || !props.lesson.time.end) {
+    return false;
+  }
+  const lessonEndTime = new Date(props.lesson.lessonDate);
+  const [hours, minutes, seconds] = props.lesson.time.end.split(':').map(Number);
+  lessonEndTime.setHours(hours, minutes, seconds);
+
+  const now = new Date();
+  return lessonEndTime < now;
+});
+
 const submitButtonText = computed(() => {
   if (isRescheduleView.value) return t('lesson.reschedule-submit');
   if (isChangeTeacherView.value) return t('lesson.change-teacher-submit');
@@ -142,7 +154,7 @@ const completeLesson = async (status: 'DONE' | 'MISSED') => {
   };
 
   try {
-    const response = await api.post('https://gelios-teacher.ddns.net/api/teacher/lesson-complete', payload);
+    const response = await api.post('/api/teacher/lesson-complete', payload);
     if (response.status === 200) {
       emit('lesson-updated', { ...props.lesson, status: status });
       close();
@@ -193,11 +205,11 @@ const submitChangeTeacher = async () => {
             {{ t('lesson.go-to-lesson') }}
           </a>
 
-          <button v-if="viewMode === 'teacher'" class="action-button success-text-button" @click="completeLesson('DONE')">
+          <button v-if="viewMode === 'teacher' && isLessonPassed" class="action-button success-text-button" @click="completeLesson('DONE')">
             <Icon icon="material-symbols:done-all" width="20" height="20" />
             {{ t('teacher.lesson_done') }}
           </button>
-          <button v-if="viewMode === 'teacher'" class="action-button danger-text-button" @click="completeLesson('MISSED')">
+          <button v-if="viewMode === 'teacher' && isLessonPassed" class="action-button danger-text-button" @click="completeLesson('MISSED')">
             <Icon icon="material-symbols:close-rounded" width="20" height="20" />
             {{ t('teacher.lesson_missed') }}
           </button>
