@@ -6,6 +6,7 @@ import Datepicker from '@vuepic/vue-datepicker';
 import api from '../services/api.js';
 import ConfirmationModal from '../components/modals/ConfirmationModal.vue';
 import { parseISO, isPast } from 'date-fns';
+import {useTeacherScheduleStore} from "@/store/teacherScheduleStore";
 
 const { t, locale } = useI18n();
 
@@ -59,6 +60,7 @@ const submitButtonText = computed(() => {
 });
 
 const confirmationTitle = computed(() => t('confirmation.title'));
+const teacherScheduleStore = useTeacherScheduleStore();
 const confirmationMessage = computed(() => {
   if (actionToConfirm.value === 'cancel') return t('confirmation.cancelLessonMessage');
   if (actionToConfirm.value === 'reschedule') return t('confirmation.rescheduleLessonMessage');
@@ -155,6 +157,7 @@ const completeLesson = async (status: 'DONE' | 'MISSED') => {
     const response = await api.post('https://gelios-teacher.ddns.net/api/teacher/lesson-complete', payload);
     if (response.status === 200 || response.status === 201 ) {
       emit('lesson-updated', { ...props.lesson, status: status });
+      await teacherScheduleStore.fetchTeacherSchedule(params);
       close();
     } else {
       console.error('Failed to complete lesson:', response.status);
