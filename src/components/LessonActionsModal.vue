@@ -157,7 +157,7 @@ const handleFeedbackSubmit = async ({ feedback, status }: { feedback: string; st
   };
 
   try {
-    const response = await api.post('/api/teacher/lesson-complete', payload);
+    const response = await api.post('https://gelios-teacher.ddns.net/api/teacher/lesson-complete', payload);
     if (response.status === 200 || response.status === 201) {
       console.log('Lesson completed successfully:', response.data);
       emit('lesson-updated', { ...props.lesson, status: status });
