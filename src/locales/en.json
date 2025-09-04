@@ -35,6 +35,7 @@
   "actions": {
     "next": "Next",
     "previous": "Previous",
+    "back": "Back",
     "add-teacher": "Add teacher",
     "add-staff": "Add staff",
     "add-student": "Add student",
@@ -116,7 +117,9 @@
     },
     "no-teacher": "No teacher",
     "lesson_done": "Lesson done",
-    "lesson_missed": "Lesson missed"
+    "lesson_missed": "Lesson missed",
+    "lesson_done_submit": "Lesson Conducted",
+    "lesson_missed_submit": "Lesson Missed"
   },
   "employee": {
     "status": {
@@ -149,7 +152,8 @@
     "choose-teacher": "Choose Teacher",
     "date-time": "Date and Time",
     "actions": "Actions",
-    "lessonTime": "Lesson Time"
+    "lessonTime": "Lesson Time",
+    "individual": "Individual"
   },
   "trainer": {
     "header": "Trainer",
@@ -223,5 +227,15 @@
     "title": "Action Confirmation",
     "cancelLessonMessage": "Are you sure you want to cancel this lesson?",
     "rescheduleLessonMessage": "Are you sure you want to reschedule this lesson?"
+  },
+  "feedback": {
+    "title": "Feedback",
+    "lesson_date": "Lesson Date",
+    "lesson_time": "Lesson Time",
+    "direction": "Direction",
+    "type": "Type",
+    "student": "Student",
+    "feedback_label": "Feedback",
+    "placeholder": "Enter your comment..."
   }
 }

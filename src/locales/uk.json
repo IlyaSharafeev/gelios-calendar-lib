@@ -35,6 +35,7 @@
   "actions": {
     "next": "Вперед",
     "previous": "Назад",
+    "back": "Назад",
     "add-teacher": "Додати вчителя",
     "add-staff": "Додати співробітника",
     "add-student": "Додати учня",
@@ -116,7 +117,9 @@
     },
     "no-teacher": "Вчителя немає",
     "lesson_done": "Урок проведено",
-    "lesson_missed": "Урок пропущений"
+    "lesson_missed": "Урок пропущений",
+    "lesson_done_submit": "Урок проведено",
+    "lesson_missed_submit": "Урок пропущено"
   },
   "employee": {
     "status": {
@@ -149,7 +152,8 @@
     "choose-teacher": "Оберіть вчителя",
     "date-time": "Дата і час",
     "actions": "Дії",
-    "lessonTime": "Час уроку"
+    "lessonTime": "Час уроку",
+    "individual": "Індивідуальний"
   },
   "trainer": {
     "header": "Тренер",
@@ -223,5 +227,15 @@
     "title": "Підтвердження дії",
     "cancelLessonMessage": "Ви впевнені, що хочете скасувати цей урок?",
     "rescheduleLessonMessage": "Ви впевнені, що хочете перенести цей урок?"
+  },
+  "feedback": {
+    "title": "Зворотний зв'язок",
+    "lesson_date": "Дата уроку",
+    "lesson_time": "Час уроку",
+    "direction": "Напрямок",
+    "type": "Тип",
+    "student": "Учень",
+    "feedback_label": "Зворотний зв'язок",
+    "placeholder": "Введіть ваш коментар..."
   }
 }

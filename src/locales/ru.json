@@ -35,6 +35,7 @@
   "actions": {
     "next": "Вперед",
     "previous": "Назад",
+    "back": "Назад",
     "add-teacher": "Добавить учителя",
     "add-staff": "Добавить сотрудника",
     "add-student": "Добавить ученика",
@@ -116,7 +117,9 @@
     },
     "no-teacher": "Учитель отсутствует",
     "lesson_done": "Урок проведен",
-    "lesson_missed": "Урок пропущен"
+    "lesson_missed": "Урок пропущен",
+    "lesson_done_submit": "Урок проведен",
+    "lesson_missed_submit": "Урок пропущен"
   },
   "employee": {
     "status": {
@@ -149,7 +152,8 @@
     "choose-teacher": "Выберите учителя",
     "date-time": "Дата и время",
     "actions": "Действия",
-    "lessonTime": "Время урока"
+    "lessonTime": "Время урока",
+    "individual": "Индивидуальный"
   },
   "trainer": {
     "header": "Тренер",
@@ -223,5 +227,15 @@
     "title": "Подтверждение действия",
     "cancelLessonMessage": "Вы уверены, что хотите отменить этот урок?",
     "rescheduleLessonMessage": "Вы уверены, что хотите перенести этот урок?"
+  },
+  "feedback": {
+    "title": "Обратная связь",
+    "lesson_date": "Дата урока",
+    "lesson_time": "Время урока",
+    "direction": "Направление",
+    "type": "Тип",
+    "student": "Ученик",
+    "feedback_label": "Обратная связь",
+    "placeholder": "Введите ваш комментарий..."
   }
 }
