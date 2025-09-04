@@ -35,7 +35,6 @@ const props = defineProps({
   }
 })
 
-// ✅ ИЗМЕНЕНИЕ: Добавление 'lesson-updated' в список событий, которые может эмитировать компонент.
 const emit = defineEmits(['weekChange', 'itemClick', 'cancel-lesson', 'reschedule-lesson', 'lesson-updated'])
 
 const { t, locale } = useI18n()
@@ -89,12 +88,7 @@ const handleItemClick = (item: any) => {
   if (item.status === 'CANCELLED') {
     return;
   }
-
-  if (props.viewMode === 'teacher') {
-    openLessonActionsModal(item, 'teacher');
-  } else {
-    openLessonActionsModal(item);
-  }
+  openLessonActionsModal(item);
 };
 
 const scrollHorizontally = (direction: 'left' | 'right') => {
@@ -142,7 +136,6 @@ const toggleExpand = (date: Date, hour: number) => {
   expandedSlots.value = newExpanded
 }
 
-// ✅ ИЗМЕНЕНИЕ: Создание вычисляемого свойства для фильтрации часов
 const filteredHours = computed(() => {
   const allHours = new Set<number>();
   props.calendarItems.forEach(item => {
@@ -153,7 +146,6 @@ const filteredHours = computed(() => {
     }
   });
 
-  // Если уроков нет, показываем стандартный диапазон, чтобы календарь не был пустым.
   if (allHours.size === 0) {
     for (let i = 8; i < 18; i++) {
       allHours.add(i);
@@ -197,11 +189,20 @@ const handleLessonActionsModalClose = () => {
 
 const handleCancelLesson = (lesson: any) => {
   emit('cancel-lesson', lesson);
+  handleLessonActionsModalClose();
 };
 
 const handleRescheduleSuccess = (payload: { originalLesson: any; newDate: any }) => {
   emit('reschedule-lesson', payload);
+  handleLessonActionsModalClose();
 };
+
+// ✅ ИЗМЕНЕНИЕ: Обработчик для lesson-updated
+const handleLessonUpdated = (event: any) => {
+  emit('lesson-updated', event);
+  handleLessonActionsModalClose();
+};
+
 
 onMounted(() => {
   emitWeekChange()
@@ -291,7 +292,7 @@ onMounted(() => {
       @close="handleLessonActionsModalClose"
       @cancel-lesson="handleCancelLesson"
       @reschedule-lesson="handleRescheduleSuccess"
-      @lesson-updated="$emit('lesson-updated', $event)"
+      @lesson-updated="handleLessonUpdated"
   />
 </template>
 

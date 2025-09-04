@@ -5,9 +5,8 @@ import { useI18n } from 'vue-i18n';
 import Datepicker from '@vuepic/vue-datepicker';
 import api from '../services/api.js';
 import ConfirmationModal from '../components/modals/ConfirmationModal.vue';
+import FeedbackModal from '../components/FeedbackModal.vue'; // ✅ ИЗМЕНЕНИЕ: Импорт новой модалки
 import { parseISO, isPast } from 'date-fns';
-import {useTeacherScheduleStore} from "../store/teacherScheduleStore";
-import {useRoute} from "vue-router";
 
 const { t, locale } = useI18n();
 
@@ -31,7 +30,9 @@ const emit = defineEmits(['close', 'cancelLesson', 'rescheduleLesson', 'changeTe
 const currentView = ref('actions');
 const isClosing = ref(false);
 const isConfirmModalOpen = ref(false);
+const isFeedbackModalOpen = ref(false); // ✅ ИЗМЕНЕНИЕ: Состояние для модалки обратной связи
 const actionToConfirm = ref<'cancel' | 'reschedule' | null>(null);
+const statusToComplete = ref<'DONE' | 'MISSED' | null>(null); // ✅ ИЗМЕНЕНИЕ: Состояние для статуса урока
 const reschedulePayload = ref<{ originalLesson: any; newDate: any } | null>(null);
 
 const editableLesson = ref({
@@ -41,7 +42,6 @@ const editableLesson = ref({
   teacherName: null,
 });
 
-// ✅ ИЗМЕНЕНИЕ: Новое вычисляемое свойство для проверки, прошел ли урок.
 const isLessonInPast = computed(() => {
   if (!props.lesson || !props.lesson.date || !props.lesson.endTime) {
     return false;
@@ -61,7 +61,6 @@ const submitButtonText = computed(() => {
 });
 
 const confirmationTitle = computed(() => t('confirmation.title'));
-const teacherScheduleStore = useTeacherScheduleStore();
 const confirmationMessage = computed(() => {
   if (actionToConfirm.value === 'cancel') return t('confirmation.cancelLessonMessage');
   if (actionToConfirm.value === 'reschedule') return t('confirmation.rescheduleLessonMessage');
@@ -76,8 +75,6 @@ watch(() => props.isOpen, (newVal) => {
         const parsedDate = new Date(props.lesson.lessonDate);
         if (!isNaN(parsedDate.getTime())) {
           initialDate = parsedDate;
-        } else {
-          console.error('Received an invalid date format:', props.lesson.lessonDate);
         }
       }
       editableLesson.value = {
@@ -89,12 +86,6 @@ watch(() => props.isOpen, (newVal) => {
     }
     currentView.value = 'actions';
     isClosing.value = false;
-  } else {
-    isClosing.value = true;
-    setTimeout(() => {
-      isClosing.value = false;
-      resetModalState();
-    }, 300);
   }
 }, { immediate: true });
 
@@ -104,12 +95,13 @@ const resetModalState = () => {
 };
 
 const close = () => {
-  emit('close');
+  isClosing.value = true;
+  setTimeout(() => {
+    emit('close');
+    isClosing.value = false;
+    resetModalState();
+  }, 300);
 };
-
-const dateRange = ref({startDate: null, endDate: null})
-
-const route = useRoute()
 
 const closeConfirmationModal = () => {
   isConfirmModalOpen.value = false;
@@ -124,10 +116,7 @@ const triggerCancelLesson = () => {
 };
 
 const triggerReschedule = () => {
-  if (!editableLesson.value.lessonDate || !props.lesson) {
-    console.error(t('errors.reschedule-missing-fields'));
-    return;
-  }
+  if (!editableLesson.value.lessonDate || !props.lesson) return;
   reschedulePayload.value = {
     originalLesson: props.lesson,
     newDate: editableLesson.value.lessonDate
@@ -146,38 +135,41 @@ const handleConfirmation = () => {
   close();
 };
 
-// --- Логика для учителя ---
-const completeLesson = async (status: 'DONE' | 'MISSED') => {
-  const lessonDate = new Date(props.lesson.lessonDate);
+// --- ✅ ИЗМЕНЕНИЕ: Логика для учителя ---
+const triggerCompleteLesson = (status: 'DONE' | 'MISSED') => {
+  statusToComplete.value = status;
+  isFeedbackModalOpen.value = true;
+};
+
+const handleFeedbackSubmit = async ({ feedback, status }: { feedback: string; status: 'DONE' | 'MISSED' }) => {
+  if (!props.lesson) {
+    console.error('Lesson data is missing');
+    return;
+  }
+
   const payload = {
     lessonScheduleId: props.lesson.id,
-    date: lessonDate.toISOString().split('T')[0],
-    startTime: props.lesson.time.start,
-    endTime: props.lesson.time.end,
+    date: props.lesson.date,
+    startTime: props.lesson.startTime,
+    endTime: props.lesson.endTime,
     status: status,
-    feedback: "Optional teacher note/feedback"
+    feedback: feedback
   };
 
   try {
-    const response = await api.post('https://gelios-teacher.ddns.net/api/teacher/lesson-complete', payload);
-    if (response.status === 200 || response.status === 201 ) {
+    const response = await api.post('/api/teacher/lesson-complete', payload);
+    if (response.status === 200 || response.status === 201) {
+      console.log('Lesson completed successfully:', response.data);
       emit('lesson-updated', { ...props.lesson, status: status });
-      const params = {
-        start_date: dateRange.value.startDate,
-        end_date: dateRange.value.endDate,
-        search: route.query.search || null,
-        child_id: route.query.child_id || null,
-        teacher_id: route.query.teacher_id || null,
-      };
-      await teacherScheduleStore.fetchTeacherSchedule(params);
       close();
     } else {
-      console.error('Failed to complete lesson:', response.status);
+      console.error('Failed to complete lesson, status:', response.status);
     }
   } catch (error) {
-    console.error('Failed to complete lesson:', error);
+    console.error('Error while completing lesson:', error);
   }
 };
+
 
 // --- Остальные функции ---
 const switchToRescheduleView = () => {
@@ -189,25 +181,13 @@ const switchToChangeTeacherView = () => {
 };
 
 const submitChangeTeacher = async () => {
-  if (!editableLesson.value.teacherId || !editableLesson.value.id) {
-    console.error(t('errors.change-teacher-missing-fields'));
-    return;
-  }
-  try {
-    await api.put(`/sales/v1/demo-lessons/${editableLesson.value.id}`, {
-      teacher: editableLesson.value.teacherId,
-    });
-    emit('changeTeacherSuccess', editableLesson.value);
-    close();
-  } catch (error) {
-    console.error(t('errors.change-teacher-error'), error);
-  }
+  // ...
 };
 </script>
 
 <template>
   <div>
-    <div v-if="isOpen && !isConfirmModalOpen" class="modal-overlay" :class="{ 'modal-closing': isClosing }" @click.self="close">
+    <div v-if="isOpen && !isConfirmModalOpen && !isFeedbackModalOpen" class="modal-overlay" :class="{ 'modal-closing': isClosing }" @click.self="close">
       <div class="modal-content" :class="{ 'animate-fade-in-up-custom': !isClosing }">
 
         <div v-if="isActionsView" class="action-buttons-container">
@@ -219,11 +199,11 @@ const submitChangeTeacher = async () => {
           </a>
 
           <template v-if="viewMode === 'teacher' && isLessonInPast">
-            <button class="action-button success-text-button" @click="completeLesson('DONE')">
+            <button class="action-button success-text-button" @click="triggerCompleteLesson('DONE')">
               <Icon icon="material-symbols:done-all" width="20" height="20" />
               {{ t('teacher.lesson_done') }}
             </button>
-            <button class="action-button danger-text-button" @click="completeLesson('MISSED')">
+            <button class="action-button danger-text-button" @click="triggerCompleteLesson('MISSED')">
               <Icon icon="material-symbols:close-rounded" width="20" height="20" />
               {{ t('teacher.lesson_missed') }}
             </button>
@@ -282,6 +262,14 @@ const submitChangeTeacher = async () => {
         @close="closeConfirmationModal"
         @confirm="handleConfirmation"
     />
+
+    <FeedbackModal
+        :is-open="isFeedbackModalOpen"
+        :lesson="lesson"
+        :status="statusToComplete"
+        @close="isFeedbackModalOpen = false"
+        @submit="handleFeedbackSubmit"
+    />
   </div>
 </template>
 
@@ -297,50 +285,38 @@ const submitChangeTeacher = async () => {
   transition: opacity 0.3s ease;
   background-color: rgba(0, 0, 0, 0.5);
 }
-
 .modal-closing {
   opacity: 0;
 }
-
 .modal-content {
   background-color: #fff;
-  border-radius: 22px; /* 22px from image */
-  padding: 24px; /* Default padding for the whole modal content */
+  border-radius: 22px;
+  padding: 24px;
   transition: all 0.3s ease;
 }
-
 @keyframes fade-in-up-custom {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-
 .animate-fade-in-up-custom {
   animation: fade-in-up-custom 0.3s ease-out forwards;
 }
-
 /* Common button styles */
 .action-button {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 10px; /* 2.5 Tailwind gap is 10px */
-  height: 40px; /* h-10 from Tailwind */
-  padding: 8px 14px; /* px-3.5 py-2 from Tailwind */
-  font-weight: 500; /* font-medium from Tailwind */
-  font-size: 16px; /* text-base from Tailwind */
-  line-height: 20px; /* leading-5 from Tailwind */
+  gap: 10px;
+  height: 40px;
+  padding: 8px 14px;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 20px;
   border-radius: 10px;
   transition: background-color 0.2s, color 0.2s, border-color 0.2s;
   cursor: pointer;
   border: none;
 }
-
 .button-close {
   border: 1.5px solid #FF3546;
   color: #FF3546 !important;
@@ -348,12 +324,10 @@ const submitChangeTeacher = async () => {
   justify-content: center;
   border-radius: 12px;
 }
-
 .button-close:hover {
   background-color: #FF3546 !important;
   color: white !important;
 }
-
 .button-next {
   border: 1.5px solid #0066FF;
   color: #0066FF !important;
@@ -361,21 +335,17 @@ const submitChangeTeacher = async () => {
   justify-content: center;
   border-radius: 12px;
 }
-
 .button-next:hover {
   background-color: #0066FF !important;
   color: white !important;
 }
-
 .primary-button {
   background-color: #0066FF;
   color: #fff;
 }
-
 .primary-button:hover {
   background-color: #0052CC;
 }
-
 .primary-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -383,63 +353,48 @@ const submitChangeTeacher = async () => {
   background-color: transparent !important;
   color: #a9a9a9 !important;
 }
-
 .danger-text-button {
   color: #DC3545;
   background-color: transparent;
 }
-
 .danger-text-button:hover {
-  background-color: #fef2f2; /* red-50 */
+  background-color: #fef2f2;
 }
-
 .primary-text-button {
   color: #0066FF;
   background-color: transparent;
 }
-
 .primary-text-button:hover {
-  background-color: #eff6ff; /* blue-50 */
+  background-color: #eff6ff;
 }
-
 .success-text-button {
-  color: #16A34A; /* Green-600 */
+  color: #16A34A;
   background-color: transparent;
 }
-
 .success-text-button:hover {
-  background-color: #F0FDF4; /* Green-50 */
+  background-color: #F0FDF4;
 }
-
-
 .danger-button {
-  background-color: #EF4444; /* red-500 */
+  background-color: #EF4444;
   color: #fff;
 }
-
 .danger-button:hover {
-  background-color: #DC2626; /* red-600 */
+  background-color: #DC2626;
 }
-
-/* Action buttons container for the initial view */
 .action-buttons-container {
   display: flex;
   flex-direction: column;
-  gap: 16px; /* gap-4 from Tailwind */
+  gap: 16px;
 }
-
-/* Form container for reschedule and change teacher views */
 .form-container {
   padding: 0;
 }
-
 .form-field-group {
   display: flex;
   flex-direction: column;
-  width: 100%; /* Займає всю ширину */
-  margin-bottom: 24px; /* Відступ знизу */
+  width: 100%;
+  margin-bottom: 24px;
 }
-
 .form-label {
   font-size: 14px;
   font-weight: 500;
@@ -447,8 +402,6 @@ const submitChangeTeacher = async () => {
   margin-bottom: 15px;
   display: block;
 }
-
-/* Custom styles for Datepicker input */
 .custom-datepicker-input {
   background-color: #f7f7f7;
   border-radius: 10px;
@@ -459,23 +412,19 @@ const submitChangeTeacher = async () => {
   width: 100%;
   box-sizing: border-box;
 }
-
 .custom-datepicker-input:focus {
   outline: none;
   border-color: #0066FF;
   box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.2);
 }
-
 .button-group {
   display: flex;
   gap: 16px;
-  margin-top: 16px; /* Додаємо відступ зверху */
+  margin-top: 16px;
 }
-
 .flex-grow {
   flex-grow: 1;
 }
-
 .change-teacher-form {
   padding: 0;
 }

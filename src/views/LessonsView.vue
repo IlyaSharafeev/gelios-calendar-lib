@@ -61,10 +61,15 @@ const processSchedules = (schedules: Schedule[]) => {
   }
 
   const calendarItems: CalendarItem[] = schedules.map(schedule => {
+    // Используем исходные date и startTime для создания объекта Date
     const lessonDate = parse(`${schedule.date} ${schedule.startTime}`, 'yyyy-MM-dd HH:mm:ss', new Date());
 
     return {
       ...schedule,
+      // Добавляем исходные date, startTime, endTime в объект CalendarItem
+      date: schedule.date,
+      startTime: schedule.startTime,
+      endTime: schedule.endTime,
       isFrozen: schedule.course_status === 'FROZEN',
       lessonDate: lessonDate,
       time: {
@@ -121,7 +126,7 @@ const handleLessonCancel = async (lesson: CalendarItem) => {
     await studentScheduleStore.cancelLesson(lesson);
     console.log('Урок успешно отменен. Обновляем данные...');
     // 2. Только после этого запрашиваем свежие данные
-    fetch();
+    await fetch();
   } catch (err) {
     console.error('Ошибка при отмене урока в компоненте:', err);
   }
@@ -138,7 +143,7 @@ const handleLessonReschedule = async ({ originalLesson, newDate }: { originalLes
     await studentScheduleStore.rescheduleLesson(originalLesson, newDate);
     console.log('Урок успешно перенесен. Обновляем данные...');
     // 2. Только после этого запрашиваем свежие данные
-    fetch();
+    await fetch();
   } catch (err) {
     console.error('Ошибка при переносе урока в компоненте:', err);
   }

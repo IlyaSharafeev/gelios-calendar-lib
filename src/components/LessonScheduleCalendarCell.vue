@@ -23,44 +23,32 @@ const isCompleted = computed(() => props.item.status === 'DONE' || props.item.st
 const cellClass = computed(() => {
   if (isCancelled.value) return 'bg-gred-5 cursor-not-allowed'
   if (isFrozen.value) return 'bg-gred-5 hover:cursor-not-allowed'
+  if (isCompleted.value) return 'bg-ggray-100'
   return 'hover:bg-gblue-5'
 });
 
 const badgeClass = computed(() => {
-  if (isCancelled.value || isFrozen.value) {
-    return 'text-gred-100 bg-gred-10'
-  }
-  // Стиль по умолчанию, как на изображении
+  if (isCancelled.value || isFrozen.value) return 'text-gred-100 bg-gred-10'
+  if (isCompleted.value) return 'text-gblack-50 bg-white'
   return 'text-gblue-100 bg-gblue-5'
 });
 
-const primaryTextColor = computed(() => isCancelled.value ? 'text-gred-100' : 'text-gblack-100');
-const secondaryTextColor = computed(() => isCancelled.value ? 'text-gred-100' : 'text-gblack-50');
-
-const statusIcon = computed(() => {
-  if (props.item.status === 'DONE') {
-    return 'material-symbols:check-circle-outline-rounded';
-  }
-  if (props.item.status === 'MISSED') {
-    return 'material-symbols:cancel-outline-rounded';
-  }
-  return '';
+const primaryTextColor = computed(() => {
+  if (isCancelled.value) return 'text-gred-100'
+  if (isCompleted.value) return 'text-gblack-50'
+  return 'text-gblack-100'
+});
+const secondaryTextColor = computed(() => {
+  if (isCancelled.value) return 'text-gred-100'
+  if (isCompleted.value) return 'text-gblack-50'
+  return 'text-gblack-50'
 });
 
-const statusText = computed(() => {
-  if (props.item.status === 'DONE') {
-    return 'Проведено';
-  }
-  if (props.item.status === 'MISSED') {
-    return 'Пропущено';
-  }
-  return '';
-});
 </script>
 
 <template>
   <div
-      class="flex items-center justify-between px-3 py-2.5 cursor-pointer transition-colors rounded-xl"
+      class="relative flex items-center justify-between px-3 py-2.5 cursor-pointer transition-colors rounded-xl overflow-hidden"
       :class="cellClass"
   >
     <div class="flex items-center gap-4">
