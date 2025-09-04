@@ -5,7 +5,7 @@ import { useI18n } from 'vue-i18n';
 import Datepicker from '@vuepic/vue-datepicker';
 import api from '../services/api.js';
 import ConfirmationModal from '../components/modals/ConfirmationModal.vue';
-import FeedbackModal from '../components/FeedbackModal.vue'; // ✅ ИЗМЕНЕНИЕ: Импорт новой модалки
+import FeedbackModal from '../components/modals/FeedbackModal.vue'; // ✅ ИЗМЕНЕНИЕ: Импорт новой модалки
 import { parseISO, isPast } from 'date-fns';
 
 const { t, locale } = useI18n();
