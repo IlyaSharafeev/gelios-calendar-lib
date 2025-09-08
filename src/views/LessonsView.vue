@@ -51,25 +51,42 @@ const handleScheduleClick = (schedule: CalendarItem) => {
   console.log('Переход к уроку (навигация):', schedule)
 }
 
+// LessonsView.vue
+
 /**
  * Converts schedules data into calendar items
  * @param schedules - The array of lesson objects from the API.
  */
-const processSchedules = (schedules: Schedule[]) => {
+const processSchedules = (schedules: any[]) => { // Принимаем any[], так как структура API отличается
   if (!schedules) {
     return { data: [], total: 0 };
   }
 
   const calendarItems: CalendarItem[] = schedules.map(schedule => {
-    // Используем исходные date и startTime для создания объекта Date
     const lessonDate = parse(`${schedule.date} ${schedule.startTime}`, 'yyyy-MM-dd HH:mm:ss', new Date());
 
     return {
       ...schedule,
-      // Добавляем исходные date, startTime, endTime в объект CalendarItem
-      date: schedule.date,
-      startTime: schedule.startTime,
-      endTime: schedule.endTime,
+
+      child: {
+        id: schedule.child.id,
+        firstName: schedule.child.first_name, // Используем first_name
+        lastName: schedule.child.last_name,   // Используем last_name
+      },
+      teacher: {
+        id: schedule.teacher.id,
+        firstName: schedule.teacher.first_name, // Используем first_name
+        lastName: schedule.teacher.last_name,   // Используем last_name
+      },
+      // ✅ ИЗМЕНЕНИЕ: Правильно мапим поля direction
+      direction: {
+        id: schedule.direction.id,
+        en: schedule.direction.nameEn, // Используем nameEn
+        uk: schedule.direction.nameUk, // Используем nameUk
+        ru: schedule.direction.nameRu, // Используем nameRu
+      },
+
+      // Остальная логика остается без изменений
       isFrozen: schedule.course_status === 'FROZEN',
       lessonDate: lessonDate,
       time: {
